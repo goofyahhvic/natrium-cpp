@@ -1,0 +1,16 @@
+.vs/
+.vscode/
+
+bin/
+bin-int/
+!dependencies/premake/bin/
+obj/
+out/
+build/
+
+*.sln
+*.vcxproj
+*.filters
+*.user
+
+Makefile
