@@ -45,6 +45,10 @@ using u64 = uint64_t;
 
 constexpr u64 NA_INVALID_HANDLE = UINT64_MAX;
 
+using namespace std::literals::chrono_literals;
+using namespace std::literals::string_literals;
+using namespace std::literals::string_view_literals;
+
 namespace Na {
     using Byte = unsigned char;
 

@@ -1,0 +1,63 @@
+#include "Pch.hpp"
+#include "Natrium-Core/DynamicLibrary.hpp"
+
+#include "Natrium-Core/Context.hpp"
+
+#if defined(NA_PLATFORM_WINDOWS)
+#include <Windows.h>
+#elif defined(NA_PLATFORM_LINUX)
+#include <dlfcn.h>
+#endif // NA_PLATFORM_WINDOWS
+
+namespace Na {
+	void DLL::load(const std::string_view& name)
+	{
+		if (name.empty())
+			return;
+
+		if (m_Handle)
+			this->unload();
+
+		m_Name = name;
+
+		g_Logger.fmt(Trace, "Loading library {}", name);
+		std::filesystem::path dir = Context::GetExecDir();
+	#if defined(NA_PLATFORM_WINDOWS)
+		dir = (dir / name).replace_extension(".dll");
+		m_Handle = LoadLibraryW(dir.c_str());
+	#elif defined(NA_PLATFORM_LINUX)
+		dir = (dir / (std::string("lib") + std::string(name))).replace_extension(".so");
+		m_Handle = dlopen(dir.c_str(), RTLD_LAZY);
+	#endif
+
+		NA_ASSERT(m_Handle, "Failed to load library {}", dir.string());
+	}
+
+	void DLL::unload(void)
+	{
+		if (!m_Handle)
+			return;
+
+		g_Logger.fmt(Trace, "Unloading library {}", m_Name);
+	#if defined(NA_PLATFORM_WINDOWS)
+		FreeLibrary((HMODULE)m_Handle);
+	#elif defined(NA_PLATFORM_LINUX)
+		dlclose(m_Handle);
+	#endif
+		m_Handle = nullptr;
+		m_Name = "";
+	}
+
+	void* DLL::fn(const char* name) const
+	{
+		if (!m_Handle)
+			return nullptr;
+
+	#if defined(NA_PLATFORM_WINDOWS)
+		return GetProcAddress((HMODULE)m_Handle, name);
+	#elif defined(NA_PLATFORM_LINUX)
+		return dlsym(m_Handle, name);
+	#endif
+		return nullptr;
+	}
+} // namespace Na

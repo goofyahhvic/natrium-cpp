@@ -1,0 +1,294 @@
+#if !defined(NEO_LINKED_LIST_HPP)
+#define NEO_LINKED_LIST_HPP
+
+#include "./ListNode.hpp"
+#include "./DoubleListIterator.hpp"
+
+namespace Neo {
+	template<typename T>
+	class DoubleList {
+	public:
+		using Node = DoubleList_Node<DoubleList>;
+		using iterator = DoubleList_Iterator<DoubleList>;
+		using const_iterator = DoubleList_ConstIterator<DoubleList>;
+		using reverse_iterator = DoubleList_ReverseIterator<DoubleList>;
+		using const_reverse_iterator = DoubleList_ConstReverseIterator<DoubleList>;
+		using T_t = T;
+	public:
+		inline DoubleList(void) : m_Head(nullptr), m_Tail(nullptr), m_Size(0) {}
+		inline ~DoubleList(void) { this->clear(); }
+		inline void clear(void) { while (this->pop_back()); }
+
+		DoubleList(const T* buffer, u64 size)
+		: m_Head(nullptr), m_Tail(nullptr), m_Size(0)
+		{
+			while (m_Size < size)
+				this->emplace_back(buffer[m_Size]);
+		}
+
+		DoubleList(T* buffer, u64 size)
+		: m_Head(nullptr), m_Tail(nullptr), m_Size(0)
+		{
+			while (m_Size < size)
+				this->emplace_back(std::move(buffer[m_Size]));
+		}
+
+		DoubleList(const std::initializer_list<T>& list)
+		: DoubleList(list.begin(), list.size()) {}
+
+		DoubleList(const DoubleList& other)
+		: DoubleList()
+		{
+			for (const T& data : other)
+				this->emplace_back(data);
+		}
+
+		DoubleList& operator=(const DoubleList& other)
+		{
+			while (m_Size > other.m_Size)
+				this->pop_back();
+
+			auto other_it = other.begin();
+			for (T& data : *this)
+				data = *(other_it++);
+
+			for (; other_it != other.end(); other_it++)
+				this->emplace_back(*other_it);
+
+			return *this;
+		}
+
+		inline DoubleList(DoubleList&& other)
+		{
+			memcpy(this, &other, sizeof(DoubleList));
+			memset(&other, 0, sizeof(DoubleList));
+		}
+
+		inline DoubleList& operator=(DoubleList&& other)
+		{
+			this->clear();
+			memcpy(this, &other, sizeof(DoubleList));
+			memset(&other, 0, sizeof(DoubleList));
+			return *this;
+		}
+
+		template<typename... ArgsT>
+		T* emplace_back(ArgsT&&... __args)
+		{
+			if (!m_Size++)
+				return &(this->_emplace_empty(std::forward<ArgsT>(__args)...)->data);
+
+			m_Tail = new Node(nullptr, m_Tail, std::forward<ArgsT>(__args)...);
+			return &((m_Tail->previous->next = m_Tail)->data);
+		}
+
+		template<typename... ArgsT>
+		T* emplace_front(ArgsT&&... __args)
+		{
+			if (!m_Size++)
+				return &(this->_emplace_empty(std::forward<ArgsT>(__args)...)->data);
+
+			m_Head = new Node(m_Head, nullptr, std::forward<ArgsT>(__args)...);
+			return &((m_Head->next->previous = m_Head)->data);
+		}
+
+		template<typename... ArgsT>
+		T* emplace_at(u64 index, ArgsT&&... __args)
+		{
+			if (!m_Size++)
+				return &(this->_emplace_empty(std::forward<ArgsT>(__args)...)->data);
+
+			if (index >= m_Size)
+			{
+				m_Tail = new Node(nullptr, m_Tail, std::forward<ArgsT>(__args)...);
+				return &((m_Tail->previous->next = m_Tail)->data);
+			}
+
+			Node* node = this->at(index).node;
+			node = new Node(node, node->previous, std::forward<ArgsT>(__args)...);
+			if (node->previous)
+				node->previous->next = node;
+			return &((node->next->previous = node)->data);
+		}
+
+		bool pop_back(void)
+		{
+			if (!m_Head)
+				return false;
+
+			m_Size--;
+			if (m_Tail = m_Tail->previous)
+			{
+				delete m_Tail->next;
+				m_Tail->next = nullptr;
+			} else
+			{
+				delete m_Head;
+				m_Head = nullptr;
+			}
+			return true;
+		}
+
+		bool pop_front(void)
+		{
+			if (!m_Head)
+				return false;
+
+			m_Size--;
+			if (m_Head = m_Head->next)
+			{
+				delete m_Head->previous;
+				m_Head->previous = nullptr;
+			} else
+			{
+				delete m_Tail;
+				m_Tail = nullptr;
+			}
+			return true;
+		}
+
+		bool pop_at(u64 index)
+		{
+			if (!m_Head)
+				return false;
+
+			if (!--m_Size && index)
+				return false;
+
+			if (index > m_Size)
+				return false;
+
+			Node* node = this->at(index).node;
+
+			if (!node->is_tail())
+				node->next->previous = node->previous;
+			else
+				m_Tail = node->previous;
+
+			if (!node->is_head())
+				node->previous->next = node->next;
+			else
+				m_Head = node->next;
+
+			delete node;
+			return true;
+		}
+
+		bool pop(T* data)
+		{
+			if (!find(data))
+				return false;
+
+			Node* node = (Node*)((byte_t*)data - 16);
+			if (!node->is_tail())
+				node->next->previous = node->previous;
+			else
+				m_Tail = node->previous;
+
+			if (!node->is_head())
+				node->previous->next = node->next;
+			else
+				m_Head = node->next;
+
+			m_Size--;
+			delete node;
+			return true;
+		}
+
+		[[nodiscard]] bool find(const T* data) const
+		{
+			if (!data) return false;
+			for (const T& it : *this)
+				if (&it == data)
+					return true;
+			return false;
+		}
+
+		bool swap(Node* node1, Node* node2)
+		{
+			if (!node1 || !node2 || node1 == node2)
+				return false;
+
+			Node* temp = node1->next;
+
+			if (node1->next = node2->next)
+				node1->next->previous = node1;
+			else
+				m_Tail = node1;
+
+			if (node2->next = temp)
+				node2->next->previous = node2;
+			else
+				m_Tail = node2;
+
+			temp = node1->previous;
+
+			if (node1->previous = node2->previous)
+				node1->previous->next = node1;
+			else
+				m_Head = node1;
+
+			if (node2->previous = temp)
+				node2->previous->next = node2;
+			else
+				m_Head = node2;
+
+			return true;
+		}
+		inline bool swap(u64 index1, u64 index2) { return this->swap(this->at(index1).node, this->at(index2).node); }
+		inline bool swap(iterator it1, iterator it2) { return this->swap(it1.node, it2.node); }
+
+		[[nodiscard]] inline iterator begin(void) { return m_Head; }
+		[[nodiscard]] inline const_iterator begin(void) const { return m_Head; }
+		[[nodiscard]] inline const_iterator cbegin(void) const { return m_Head; }
+
+		[[nodiscard]] inline iterator end(void) { return nullptr; }
+		[[nodiscard]] inline const_iterator end(void) const { return nullptr; }
+		[[nodiscard]] inline const_iterator cend(void) const { return nullptr; }
+
+		[[nodiscard]] inline reverse_iterator rbegin(void) { return m_Tail; }
+		[[nodiscard]] inline const_reverse_iterator rbegin(void) const { return m_Tail; }
+		[[nodiscard]] inline const_reverse_iterator crbegin(void) const { return m_Tail; }
+
+		[[nodiscard]] inline reverse_iterator rend(void) { return nullptr; }
+		[[nodiscard]] inline const_reverse_iterator rend(void) const { return nullptr; }
+		[[nodiscard]] inline const_reverse_iterator crend(void) const { return nullptr; }
+
+		[[nodiscard]] iterator at(u64 index)
+		{
+			if (index > m_Size * 0.5)
+				return iterator(m_Tail, m_Size - index - 1, backwards);
+			return iterator(m_Head, index, forward);
+		}
+		[[nodiscard]] const_iterator at(u64 index) const
+		{
+			if (index > m_Size * 0.5)
+				return const_iterator(m_Tail, m_Size - index - 1, backwards);
+			return const_iterator(m_Head, index, forward);
+		}
+
+		[[nodiscard]] inline T& operator[](u64 index) { return *(this->at(index)); }
+		[[nodiscard]] inline const T& operator[](u64 index) const { return *(this->at(index)); }
+
+		[[nodiscard]] inline T& head(void) { return *m_Head; }
+		[[nodiscard]] inline const T& head(void) const { return *m_Head; }
+
+		[[nodiscard]] inline T& tail(void) { return *m_Tail; }
+		[[nodiscard]] inline const T& tail(void) const { return *m_Tail; }
+
+		[[nodiscard]] inline u64 size(void) { return m_Size; }
+		[[nodiscard]] inline bool empty(void) { return !m_Size; }
+	private:
+		template<typename... ArgsT>
+		Node* _emplace_empty(ArgsT&&... __args)
+		{
+			m_Head = new Node(nullptr, nullptr, std::forward<ArgsT>(__args)...);
+			return m_Tail = m_Head;
+		}
+	private:
+		Node* m_Head, * m_Tail;
+		u64 m_Size;
+	};
+} // namespace Neo
+
+#endif // NEO_LINKED_LIST_HPP
