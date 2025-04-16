@@ -74,7 +74,26 @@ namespace Na {
     constexpr Platform k_Platform = Platform::None;
 #endif // NA_PLATFORM
 
-    void HelloWorld(void);
+    [[nodiscard]] inline i32 Round32(float num) { return (i32)floor(num + 0.5f); }
+    [[nodiscard]] inline i64 Round64(double num) { return (i64)floor(num + 0.5); }
+
+    template<typename T>
+    [[nodiscard]] inline T* tmalloc(u64 count = 1)
+    {
+        return (T*)malloc(count * sizeof(T));
+    }
+    
+    template<typename T>
+    [[nodiscard]] inline T* tcalloc(u64 count = 1)
+    {
+        return (T*)calloc(count, sizeof(T));
+    }
+    
+    template<typename T>
+    [[nodiscard]] inline T* trealloc(T* buffer, u64 count)
+    {
+        return (T*)realloc(buffer, count * sizeof(T));
+    }
 
 } // namespace Na
 
