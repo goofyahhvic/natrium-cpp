@@ -4,6 +4,7 @@
 #include "./Core.hpp"
 #include "./Logger.hpp"
 #include "./Event.hpp"
+#include "Natrium-Renderer/VkContext.hpp"
 
 namespace Na {
 	class Context {
@@ -31,6 +32,8 @@ namespace Na {
 		std::string_view m_Version;
 
 		EventQueue m_EventQueue;
+
+		VkContext m_VkContext;
 
 		static inline Context* s_Context = nullptr;
 	};

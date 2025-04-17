@@ -40,12 +40,6 @@ namespace Na {
 
 	Context& Context::operator=(Context&& other)
 	{
-		m_ExecPath.~path();
-		m_ExecDir.~path();
-		m_ExecName.~path();
-
-		m_EventQueue.~ArrayList();
-
 		memcpy(this, &other, sizeof(Context));
 		memset(&other, 0, sizeof(Context));
 
@@ -69,6 +63,8 @@ namespace Na {
 		NA_ASSERT(result, "Failed to initialize glfw!");
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
+		context.m_VkContext = VkContext::Initialize();
+
 		s_Context = &context;
 		return context;
 	}
@@ -77,6 +73,9 @@ namespace Na {
 	{
 		g_Logger(Info, "Shutting down Natrium, Goodbye!");
 
+		VkContext::Shutdown();
 		glfwTerminate();
+
+		s_Context = nullptr;
 	}
 } // namespace Na

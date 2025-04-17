@@ -2,6 +2,10 @@ IncludeDirectories = {}
 LibraryDirectories = {}
 Libraries = {}
 
+VulkanSdk = os.getenv("VULKAN_SDK")
+IncludeDirectories["vk"] = "%{VulkanSdk}/Include/"
+LibraryDirectories["vk"] = "%{VulkanSdk}/Lib/"
+
 include "dependencies/fmt-Premake.lua"
 include "dependencies/stb-Premake.lua"
 include "dependencies/GLFW-Premake.lua"
@@ -40,17 +44,25 @@ project "Natrium-Core"
     }
 
     filter "system:linux"
+        links {
+            "vulkan",
+            "shaderc"
+        }
+
         defines { "NA_PLATFORM_LINUX" }
 
     filter "system:windows"
+        includedirs "%{IncludeDirectories.vk}" 
+		libdirs "%{LibraryDirectories.vk}" 
+
+        links "vulkan-1"
+
         defines {
             "NA_PLATFORM_WINDOWS",
             "_CRT_SECURE_NO_WARNINGS"
         }
 
-        buildoptions {
-            "/utf-8"
-        }
+        buildoptions { "/utf-8" }
 
     filter "configurations:dbg"
         symbols "On"
@@ -66,6 +78,11 @@ project "Natrium-Core"
         optimize "speed"
         symbols "Off"
         defines { "NA_CONFIG_DIST" }
+
+    filter { "system:windows", "configurations:dbg" }
+        links "shaderc_combinedd"
+    filter { "system:windows", "configurations:rel or dist" }
+        links "shaderc_combined"
 
 project "Natrium-Renderer"
     location "./"
@@ -102,17 +119,25 @@ project "Natrium-Renderer"
     }
 
     filter "system:linux"
+        links {
+            "vulkan",
+            "shaderc"
+        }
+
         defines { "NA_PLATFORM_LINUX" }
 
     filter "system:windows"
+        includedirs "%{IncludeDirectories.vk}" 
+		libdirs "%{LibraryDirectories.vk}" 
+
+        links "vulkan-1"
+
         defines {
             "NA_PLATFORM_WINDOWS",
             "_CRT_SECURE_NO_WARNINGS"
         }
 
-        buildoptions {
-            "/utf-8"
-        }
+        buildoptions { "/utf-8" }
 
     filter "configurations:dbg"
         symbols "On"
@@ -128,3 +153,8 @@ project "Natrium-Renderer"
         optimize "speed"
         symbols "Off"
         defines { "NA_CONFIG_DIST" }
+
+    filter { "system:windows", "configurations:dbg" }
+        links "shaderc_combinedd"
+    filter { "system:windows", "configurations:rel or dist" }
+        links "shaderc_combined"
