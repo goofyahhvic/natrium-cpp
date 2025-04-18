@@ -110,11 +110,11 @@ namespace Na {
 			m_Buffer = trealloc<T>(m_Buffer, new_size);
 		}
 
-		template<typename... ArgsT>
-		u64 emplace(ArgsT&&... __args)
+		template<typename... t_Args>
+		u64 emplace(t_Args&&... __args)
 		{
 			m_Buffer = trealloc<T>(m_Buffer, ++m_Size);
-			new (m_Buffer + m_Size - 1) T(std::forward<ArgsT>(__args)...);
+			new (m_Buffer + m_Size - 1) T(std::forward<t_Args>(__args)...);
 			return m_Size;
 		}
 

@@ -59,8 +59,8 @@ namespace Na {
 			);
 		}
 
-		template<typename... ArgsT>
-		inline void fmt(LogLevel level, fmt::format_string<ArgsT...> str, ArgsT&&... __args)
+		template<typename... t_Args>
+		inline void fmt(LogLevel level, fmt::format_string<t_Args...> str, t_Args&&... __args)
 		{
 			if (!t_Enabled)
 				return;
@@ -71,7 +71,7 @@ namespace Na {
 				std::chrono::round<std::chrono::seconds>(std::chrono::system_clock::now()),
 				name,
 				NA_COLOR_RSET,
-				NA_FORMAT(str, std::forward<ArgsT>(__args)...)
+				NA_FORMAT(str, std::forward<t_Args>(__args)...)
 			);
 		}
 

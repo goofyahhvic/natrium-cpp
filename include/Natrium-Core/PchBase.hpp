@@ -43,4 +43,10 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/string_cast.hpp>
 
+#include "Natrium-Renderer/Vulkan.hpp"
+
+#include "Natrium-Core/Template/ArrayList.hpp"
+#include "Natrium-Core/Template/ArrayVector.hpp"
+#include "Natrium-Core/Template/DoubleList.hpp"
+
 #endif // NA_PCH_BASE_HPP

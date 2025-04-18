@@ -4,7 +4,7 @@
 #include "./ListNode.hpp"
 #include "./DoubleListIterator.hpp"
 
-namespace Neo {
+namespace Na {
 	template<typename T>
 	class DoubleList {
 	public:
@@ -72,40 +72,40 @@ namespace Neo {
 			return *this;
 		}
 
-		template<typename... ArgsT>
-		T* emplace_back(ArgsT&&... __args)
+		template<typename... t_Args>
+		T* emplace_back(t_Args&&... __args)
 		{
 			if (!m_Size++)
-				return &(this->_emplace_empty(std::forward<ArgsT>(__args)...)->data);
+				return &(this->_emplace_empty(std::forward<t_Args>(__args)...)->data);
 
-			m_Tail = new Node(nullptr, m_Tail, std::forward<ArgsT>(__args)...);
+			m_Tail = new Node(nullptr, m_Tail, std::forward<t_Args>(__args)...);
 			return &((m_Tail->previous->next = m_Tail)->data);
 		}
 
-		template<typename... ArgsT>
-		T* emplace_front(ArgsT&&... __args)
+		template<typename... t_Args>
+		T* emplace_front(t_Args&&... __args)
 		{
 			if (!m_Size++)
-				return &(this->_emplace_empty(std::forward<ArgsT>(__args)...)->data);
+				return &(this->_emplace_empty(std::forward<t_Args>(__args)...)->data);
 
-			m_Head = new Node(m_Head, nullptr, std::forward<ArgsT>(__args)...);
+			m_Head = new Node(m_Head, nullptr, std::forward<t_Args>(__args)...);
 			return &((m_Head->next->previous = m_Head)->data);
 		}
 
-		template<typename... ArgsT>
-		T* emplace_at(u64 index, ArgsT&&... __args)
+		template<typename... t_Args>
+		T* emplace_at(u64 index, t_Args&&... __args)
 		{
 			if (!m_Size++)
-				return &(this->_emplace_empty(std::forward<ArgsT>(__args)...)->data);
+				return &(this->_emplace_empty(std::forward<t_Args>(__args)...)->data);
 
 			if (index >= m_Size)
 			{
-				m_Tail = new Node(nullptr, m_Tail, std::forward<ArgsT>(__args)...);
+				m_Tail = new Node(nullptr, m_Tail, std::forward<t_Args>(__args)...);
 				return &((m_Tail->previous->next = m_Tail)->data);
 			}
 
 			Node* node = this->at(index).node;
-			node = new Node(node, node->previous, std::forward<ArgsT>(__args)...);
+			node = new Node(node, node->previous, std::forward<t_Args>(__args)...);
 			if (node->previous)
 				node->previous->next = node;
 			return &((node->next->previous = node)->data);
@@ -179,7 +179,7 @@ namespace Neo {
 			if (!find(data))
 				return false;
 
-			Node* node = (Node*)((byte_t*)data - 16);
+			Node* node = (Node*)((Byte*)data - 16);
 			if (!node->is_tail())
 				node->next->previous = node->previous;
 			else
@@ -258,13 +258,13 @@ namespace Neo {
 		{
 			if (index > m_Size * 0.5)
 				return iterator(m_Tail, m_Size - index - 1, backwards);
-			return iterator(m_Head, index, forward);
+			return iterator(m_Head, index, forwards);
 		}
 		[[nodiscard]] const_iterator at(u64 index) const
 		{
 			if (index > m_Size * 0.5)
 				return const_iterator(m_Tail, m_Size - index - 1, backwards);
-			return const_iterator(m_Head, index, forward);
+			return const_iterator(m_Head, index, forwards);
 		}
 
 		[[nodiscard]] inline T& operator[](u64 index) { return *(this->at(index)); }
@@ -279,10 +279,10 @@ namespace Neo {
 		[[nodiscard]] inline u64 size(void) { return m_Size; }
 		[[nodiscard]] inline bool empty(void) { return !m_Size; }
 	private:
-		template<typename... ArgsT>
-		Node* _emplace_empty(ArgsT&&... __args)
+		template<typename... t_Args>
+		Node* _emplace_empty(t_Args&&... __args)
 		{
-			m_Head = new Node(nullptr, nullptr, std::forward<ArgsT>(__args)...);
+			m_Head = new Node(nullptr, nullptr, std::forward<t_Args>(__args)...);
 			return m_Tail = m_Head;
 		}
 	private:

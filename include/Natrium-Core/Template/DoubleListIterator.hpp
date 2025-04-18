@@ -22,7 +22,7 @@ namespace Na {
 
 		inline This& operator+=(u64 amount)
 		{
-			for ( i = 0; i < amount; i++)
+			for (u64 i = 0; i < amount; i++)
 				++(*this);
 			return *this;
 		}

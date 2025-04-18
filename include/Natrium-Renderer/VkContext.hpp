@@ -1,10 +1,7 @@
 #if !defined(NA_VK_CONTEXT_HPP)
 #define NA_VK_CONTEXT_HPP
 
-#include "Vulkan.hpp"
 #include "Natrium-Core/Core.hpp"
-
-#include "Natrium-Core/Template/ArrayVector.hpp"
 
 namespace Na {
     inline constexpr bool k_ValidationLayersEnabled = k_BuildConfig != BuildConfig::Distribution;
@@ -16,7 +13,7 @@ namespace Na {
 		static QueueFamilyIndices Get(vk::PhysicalDevice device, vk::SurfaceKHR surface);
 	};
 	struct SurfaceSupport {
-		VkSurfaceCapabilitiesKHR capabilities;
+		vk::SurfaceCapabilitiesKHR capabilities;
 		Na::ArrayVector<vk::SurfaceFormatKHR> formats;
 		Na::ArrayVector<vk::PresentModeKHR> present_modes;
 

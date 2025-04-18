@@ -108,19 +108,19 @@ namespace Na {
 			this->reallocate(new_capacity);
 		}
 
-		template<typename... ArgsT>
-		inline u64 emplace(ArgsT&&... __args)
+		template<typename... t_Args>
+		inline u64 emplace(t_Args&&... __args)
 		{
 			if (m_Size == m_Capacity)
 				this->reallocate(m_Capacity * 2 + 1);
-			new (m_Buffer + m_Size) T(std::forward<ArgsT>(__args)...);
+			new (m_Buffer + m_Size) T(std::forward<t_Args>(__args)...);
 			return m_Size++;
 		}
 
-		template<typename... ArgsT>
-		inline u64 emplace_d(ArgsT&&... __args)
+		template<typename... t_Args>
+		inline u64 emplace_d(t_Args&&... __args)
 		{
-			new (m_Buffer + m_Size) T(std::forward<ArgsT>(__args)...);
+			new (m_Buffer + m_Size) T(std::forward<t_Args>(__args)...);
 			return m_Size++;
 		}
 

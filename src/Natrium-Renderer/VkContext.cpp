@@ -2,7 +2,6 @@
 #include "Natrium-Renderer/VkContext.hpp"
 
 #include "Natrium-Core/Logger.hpp"
-#include "Natrium-Core/Template/ArrayList.hpp"
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -18,9 +17,11 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
 	{
 		if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
 			Na::g_Logger(Na::Error, data->pMessage);
-		else if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
+		else
+		if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
 			Na::g_Logger(Na::Warn, data->pMessage);
-		else if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT)
+		else
+		if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT)
 			Na::g_Logger(Na::Info, data->pMessage);
 		else
 			Na::g_Logger(Na::Trace, data->pMessage);
