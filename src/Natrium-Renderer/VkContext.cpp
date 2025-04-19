@@ -136,14 +136,14 @@ namespace Na {
 		support.capabilities = device.getSurfaceCapabilitiesKHR(surface);
 
 		u32 format_count;
-		device.getSurfaceFormatsKHR(surface, &format_count, nullptr);
+		(void)device.getSurfaceFormatsKHR(surface, &format_count, nullptr);
 		support.formats.resize(format_count);
-		device.getSurfaceFormatsKHR(surface, &format_count, support.formats.ptr());
+		(void)device.getSurfaceFormatsKHR(surface, &format_count, support.formats.ptr());
 
 		u32 present_mode_count;
-		device.getSurfacePresentModesKHR(surface, &present_mode_count, nullptr);
+		(void)device.getSurfacePresentModesKHR(surface, &present_mode_count, nullptr);
 		support.present_modes.resize(format_count);
-		device.getSurfacePresentModesKHR(surface, &format_count, support.present_modes.ptr());
+		(void)device.getSurfacePresentModesKHR(surface, &format_count, support.present_modes.ptr());
 
 		return support;
 	}

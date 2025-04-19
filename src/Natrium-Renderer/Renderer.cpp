@@ -121,14 +121,14 @@ namespace Na {
 		if (m_HasResized)
 			_recreate_swapchain();
 		
-		logical_device.waitForFences(
+		(void)logical_device.waitForFences(
 			1, &m_Sync.in_flight[m_CurrentFrame],
 			VK_TRUE, // wait all
 			UINT64_MAX // timeout
 		);
 
 		try {
-			logical_device.acquireNextImageKHR(
+			(void)logical_device.acquireNextImageKHR(
 				m_Swapchain,
 				UINT64_MAX, // timeout
 				m_Sync.image_available[m_CurrentFrame],
@@ -137,10 +137,11 @@ namespace Na {
 			);
 		} catch (const vk::OutOfDateKHRError& err)
 		{
+			(void)err;
 			_recreate_swapchain();
 		}
 
-		logical_device.resetFences(1, &m_Sync.in_flight[m_CurrentFrame]);
+		(void)logical_device.resetFences(1, &m_Sync.in_flight[m_CurrentFrame]);
 		cmd_buffer.reset();
 
 		vk::CommandBufferBeginInfo begin_info;
@@ -195,7 +196,7 @@ namespace Na {
 		submit_info.commandBufferCount = 1;
 		submit_info.pCommandBuffers = &cmd_buffer;
 
-		VkContext::GetGraphicsQueue().submit(1, &submit_info, m_Sync.in_flight[m_CurrentFrame]);
+		(void)VkContext::GetGraphicsQueue().submit(1, &submit_info, m_Sync.in_flight[m_CurrentFrame]);
 
 		vk::PresentInfoKHR present_info;
 		present_info.waitSemaphoreCount = submit_info.waitSemaphoreCount;
@@ -211,6 +212,7 @@ namespace Na {
 				_recreate_swapchain();
 		} catch (const vk::OutOfDateKHRError& err)
 		{
+			(void)err;
 			_recreate_swapchain();
 		}
 
@@ -284,9 +286,9 @@ namespace Na {
 		m_Swapchain = logical_device.createSwapchainKHR(create_info);
 		
 		u32 img_count;
-		logical_device.getSwapchainImagesKHR(m_Swapchain, &img_count, nullptr);
+		(void)logical_device.getSwapchainImagesKHR(m_Swapchain, &img_count, nullptr);
 		m_Images.resize(img_count);
-		logical_device.getSwapchainImagesKHR(m_Swapchain, &img_count, m_Images.ptr());
+		(void)logical_device.getSwapchainImagesKHR(m_Swapchain, &img_count, m_Images.ptr());
 	}
 
 	void Renderer::_create_image_views(void)
@@ -443,7 +445,7 @@ namespace Na {
 		cmd_alloc_info.commandBufferCount = m_Config.max_frames_in_flight;
 
 		m_GraphicsCmdBuffers.resize(m_Config.max_frames_in_flight);
-		logical_device.allocateCommandBuffers(&cmd_alloc_info, m_GraphicsCmdBuffers.ptr());
+		(void)logical_device.allocateCommandBuffers(&cmd_alloc_info, m_GraphicsCmdBuffers.ptr());
 
 		vk::CommandPoolCreateInfo single_time_pool_info;
 		single_time_pool_info.queueFamilyIndex = m_QueueIndices.graphics;
@@ -523,7 +525,7 @@ namespace Na {
 		alloc_info.commandBufferCount = 1;
 
 		vk::CommandBuffer cmd_buffer;
-		VkContext::GetLogicalDevice().allocateCommandBuffers(&alloc_info, &cmd_buffer);
+		(void)VkContext::GetLogicalDevice().allocateCommandBuffers(&alloc_info, &cmd_buffer);
 
 		vk::CommandBufferBeginInfo begin_info;
 		begin_info.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
@@ -541,7 +543,7 @@ namespace Na {
 		submit_info.commandBufferCount = 1;
 		submit_info.pCommandBuffers = &cmd_buffer;
 
-		VkContext::GetGraphicsQueue().submit(1, &submit_info, nullptr);
+		(void)VkContext::GetGraphicsQueue().submit(1, &submit_info, nullptr);
 		VkContext::GetGraphicsQueue().waitIdle();
 
 		VkContext::GetLogicalDevice().freeCommandBuffers(cmd_pool, 1, &cmd_buffer);
