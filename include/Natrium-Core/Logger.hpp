@@ -104,6 +104,8 @@ namespace Na {
 
 			this->log(level, msg);
 		}
+
+		[[nodiscard]] inline constexpr bool enabled(void) { return t_Enabled; }
 	};
 	inline Logger<> g_Logger{"Natrium", &std::clog};
 } // namespace Na
