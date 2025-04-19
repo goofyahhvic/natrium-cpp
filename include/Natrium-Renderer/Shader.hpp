@@ -1,6 +1,8 @@
 #if !defined(NA_SHADER_HPP)
 #define NA_SHADER_HPP
 
+#include "Natrium-Core/Core.hpp"
+
 namespace Na {
 	enum class ShaderStageBits : u32 {
 		None = 0,

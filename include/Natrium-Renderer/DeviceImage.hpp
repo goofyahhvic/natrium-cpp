@@ -1,8 +1,6 @@
 #if !defined(NA_DEVICE_IMAGE_HPP)
 #define NA_DEVICE_IMAGE_HPP
 
-#include "./VkContext.hpp"
-
 namespace Na {
 	vk::Format FindSupportedFormat(
 		const std::initializer_list<vk::Format>& candidates,

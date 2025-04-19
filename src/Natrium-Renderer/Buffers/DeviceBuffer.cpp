@@ -1,6 +1,7 @@
 #include "Pch.hpp"
 #include "Natrium-Renderer/Buffers/DeviceBuffer.hpp"
 
+#include "Natrium-Renderer/VkContext.hpp"
 #include "Natrium-Renderer/Renderer.hpp"
 
 namespace Na {
@@ -40,6 +41,16 @@ namespace Na {
 
 		this->memory = logical_device.allocateMemory(alloc_info);
 		logical_device.bindBufferMemory(this->buffer, this->memory, 0);
+	}
+
+	void DeviceBuffer::destroy(void)
+	{
+		vk::Device logical_device = VkContext::GetLogicalDevice();
+
+		logical_device.destroyBuffer(this->buffer);
+		logical_device.freeMemory(this->memory);
+
+		memset(this, 0, sizeof(DeviceBuffer));
 	}
 
 	void DeviceBuffer::copy(const DeviceBuffer& other, vk::CommandPool cmd_pool)

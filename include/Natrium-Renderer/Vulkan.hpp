@@ -1,6 +1,7 @@
 #if !defined(NA_VULKAN_HPP)
 #define NA_VULKAN_HPP
 
+#include "Natrium-Core/Core.hpp"
 #include <vulkan/vulkan.hpp>
 #include <vulkan/vulkan_raii.hpp>
 
@@ -47,6 +48,12 @@ namespace Na {
 		return "UNKNOWN_ERROR";
 	}
 
+	struct QueueFamilyIndices {
+		u32 graphics = UINT32_MAX;
+		inline operator bool(void) const { return graphics != UINT32_MAX; }
+
+		static QueueFamilyIndices Get(vk::PhysicalDevice device, vk::SurfaceKHR surface);
+	};
 } // namespace Na
 
 #endif // NA_VULKAN_HPP

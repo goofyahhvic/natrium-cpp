@@ -17,12 +17,18 @@ namespace Na {
 		Renderer(Window& window);
 		void destroy(void);
 
-		void bind_pipeline(u64 pipeline_handle);
-
 		void clear(const glm::vec4& color = Colors::k_Black);
 		void present(void);
 
 		void update_size(void);
+
+		[[nodiscard]] inline RendererConfig config(void) const { return m_Config; }
+		[[nodiscard]] inline vk::CommandPool single_time_cmd_pool(void) const { return m_SingleTimeCmdPool; }
+
+		[[nodiscard]] inline vk::CommandBuffer current_graphics_cmd_buffer(void) const { return m_GraphicsCmdBuffers[m_CurrentFrame]; }
+
+		inline void bind_pipeline(u64 pipeline_handle) { m_PipelineHandle = pipeline_handle; }
+		[[nodiscard]] inline u64 pipeline_handle(void) const { return m_PipelineHandle; }
 
 		[[nodiscard]] inline u32 width(void) const { return m_Width; }
 		[[nodiscard]] inline u32 height(void) const { return m_Height; }
@@ -43,6 +49,8 @@ namespace Na {
 
 		void _recreate_swapchain(void);
 	private:
+		friend class Pipeline;
+
 		Window* m_Window;
 		vk::SurfaceKHR m_Surface;
 

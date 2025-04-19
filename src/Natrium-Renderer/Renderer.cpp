@@ -3,6 +3,8 @@
 
 #include "Natrium-Core/Logger.hpp"
 
+#include "Natrium-Renderer/VkContext.hpp"
+
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
@@ -108,11 +110,6 @@ namespace Na {
 			VkContext::GetInstance().destroySurfaceKHR(m_Surface);
 	}
 
-	void Renderer::bind_pipeline(u64 pipeline_handle)
-	{
-		m_PipelineHandle = pipeline_handle;
-	}
-
 	void Renderer::clear(const glm::vec4& color)
 	{
 		vk::Device logical_device = VkContext::GetLogicalDevice();
@@ -165,7 +162,17 @@ namespace Na {
 		cmd_buffer.beginRenderPass(render_pass_info, vk::SubpassContents::eInline);
 		if (m_PipelineHandle != NA_INVALID_HANDLE)
 		{
-			//TODO: BIND PIPELINE
+			PipelineData& pipeline = VkContext::GetPipelinePool()[m_PipelineHandle];
+			cmd_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline.pipeline);
+
+			if (!pipeline.descriptor_sets.empty())
+				cmd_buffer.bindDescriptorSets(
+					vk::PipelineBindPoint::eGraphics,
+					pipeline.layout,
+					0, // first set
+					1, &pipeline.descriptor_sets[m_CurrentFrame],
+					0, nullptr // dynamic offsets
+				);
 		}
 
 		cmd_buffer.setViewport(0, 1, &m_Viewport);
@@ -478,6 +485,9 @@ namespace Na {
 	void Renderer::_recreate_swapchain(void)
 	{
 		vk::Device logical_device = VkContext::GetLogicalDevice();
+
+		m_Width = m_Window->width();
+		m_Height = m_Window->height();
 
 		m_Viewport.width = (float)m_Width;
 		m_Viewport.height = (float)m_Height;

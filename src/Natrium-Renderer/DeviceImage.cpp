@@ -1,6 +1,7 @@
 #include "Pch.hpp"
 #include "Natrium-Renderer/DeviceImage.hpp"
 
+#include "Natrium-Renderer/VkContext.hpp"
 #include "Natrium-Renderer/Buffers/DeviceBuffer.hpp"
 #include "Natrium-Renderer/Renderer.hpp"
 
@@ -92,6 +93,8 @@ namespace Na {
 
 		if (this->memory)
 			logical_device.freeMemory(this->memory);
+
+		memset(this, 0, sizeof(DeviceImage));
 	}
 
 	void DeviceImage::transition_layout(
@@ -115,8 +118,8 @@ namespace Na {
 		barrier.image = this->img;
 		barrier.subresourceRange = this->subresource_range;
 
-		vk::PipelineStageFlags execute_stage = {};
-		vk::PipelineStageFlags wait_stage = {};
+		vk::PipelineStageFlags execute_stage;
+		vk::PipelineStageFlags wait_stage;
 
 		if (old_layout == vk::ImageLayout::eUndefined
 		 && new_layout == vk::ImageLayout::eTransferDstOptimal)

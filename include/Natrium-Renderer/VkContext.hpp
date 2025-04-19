@@ -2,16 +2,11 @@
 #define NA_VK_CONTEXT_HPP
 
 #include "Natrium-Core/Core.hpp"
+#include "Pipeline.hpp"
 
 namespace Na {
     inline constexpr bool k_ValidationLayersEnabled = k_BuildConfig != BuildConfig::Distribution;
 
-	struct QueueFamilyIndices {
-		u32 graphics = UINT32_MAX;
-		inline operator bool(void) const { return graphics != UINT32_MAX; }
-
-		static QueueFamilyIndices Get(vk::PhysicalDevice device, vk::SurfaceKHR surface);
-	};
 	struct SurfaceSupport {
 		vk::SurfaceCapabilitiesKHR capabilities;
 		Na::ArrayVector<vk::SurfaceFormatKHR> formats;
@@ -42,6 +37,8 @@ namespace Na {
 
 		[[nodiscard]] static inline vk::Queue                  GetGraphicsQueue(void)  { return s_Context->m_GraphicsQueue; }
 
+		[[nodiscard]] static inline ArrayList<PipelineData>&   GetPipelinePool(void)   { return s_Context->m_PipelinePool; }
+
 	private:
 		vk::Instance               m_Instance = nullptr;
 		vk::DebugUtilsMessengerEXT m_DebugMessenger = nullptr;
@@ -49,6 +46,8 @@ namespace Na {
 		vk::Device                 m_LogicalDevice = nullptr;
 
 		vk::Queue                  m_GraphicsQueue = nullptr;
+
+		ArrayList<PipelineData>    m_PipelinePool;
 
 		static inline VkContext* s_Context = nullptr;
 	};
