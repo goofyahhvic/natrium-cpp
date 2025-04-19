@@ -23,7 +23,7 @@ namespace Na {
 		vk::ImageSubresourceRange subresource_range;
 
 		DeviceImage(void)
-		: img(nullptr), memory(nullptr), extent({}), format(vk::Format::eUndefined), subresource_range({})
+		: img(nullptr), memory(nullptr), extent({}), format(vk::Format::eUndefined)
 		{}
 		DeviceImage(
 			const vk::Extent3D& extent,

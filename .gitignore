@@ -14,3 +14,4 @@ build/
 *.user
 
 Makefile
+*.make

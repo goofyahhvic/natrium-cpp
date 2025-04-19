@@ -6,12 +6,12 @@
 namespace Na {
 	enum class ShaderStageBits : u32 {
 		None = 0,
-		Vertex = vk::ShaderStageFlagBits::eVertex,
-		Fragment = vk::ShaderStageFlagBits::eFragment,
+		Vertex   = (u32)vk::ShaderStageFlagBits::eVertex,
+		Fragment = (u32)vk::ShaderStageFlagBits::eFragment,
 
 
-		Pixel = Fragment,
-		All = vk::ShaderStageFlagBits::eAll
+		Pixel    = Fragment,
+		All      = (u32)vk::ShaderStageFlagBits::eAll
 	};
 
 	class Shader {

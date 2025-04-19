@@ -116,15 +116,10 @@ namespace Na {
 	static bool areRequiredDeviceExtensionsSupported(vk::PhysicalDevice device)
 	{
 		auto available_extensions = device.enumerateDeviceExtensionProperties();
-		Na::ArrayList<std::string_view> required_extensions(requiredDeviceExtensions.capacity());
+        std::set<std::string_view> required_extensions(requiredDeviceExtensions.begin(), requiredDeviceExtensions.end());
 
-		for (const char* required_extension : requiredDeviceExtensions)
-		{
-			required_extensions.emplace(required_extension);
-			for (const VkExtensionProperties& available_extension : available_extensions)
-				if (required_extensions.tail() == available_extension.extensionName)
-					required_extensions.pop();
-		}
+        for (const auto& extension : available_extensions)
+            required_extensions.erase(extension.extensionName);
 
 		return required_extensions.empty();
 	}
