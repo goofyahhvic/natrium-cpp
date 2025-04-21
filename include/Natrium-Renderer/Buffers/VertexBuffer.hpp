@@ -16,7 +16,7 @@ namespace Na {
 
 		[[nodiscard]] inline u64 size(void) const { return m_Buffer.size; }
 		[[nodiscard]] inline u32 count(void) const { return m_Count; }
-		[[nodiscard]] inline DeviceBuffer buffer(void) const { return m_Buffer; }
+		[[nodiscard]] inline const DeviceBuffer& buffer(void) const { return m_Buffer; }
 
 		[[nodiscard]] inline operator bool(void) const { return m_Buffer; }
 	private:

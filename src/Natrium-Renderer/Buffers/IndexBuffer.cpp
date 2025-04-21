@@ -39,17 +39,30 @@ namespace Na {
 		stage_buffer.destroy();
 	}
 
-	void IndexBuffer::draw(const VertexBuffer& vbo, Renderer& renderer) const
+	void IndexBuffer::draw(const VertexBuffer& vertex_buffer, Renderer& renderer) const
 	{
 		Frame& frame = renderer.current_frame();
-		if (!frame)
-			return;
 
-		vk::Buffer vertex_buffers[] = { vbo.buffer().buffer };
 		vk::DeviceSize offsets[] = { 0 };
 
-		frame.cmd_buffer.bindVertexBuffers(0, 1, vertex_buffers, offsets);
+		frame.cmd_buffer.bindVertexBuffers(0, 1, &vertex_buffer.buffer().buffer, offsets);
 		frame.cmd_buffer.bindIndexBuffer(m_Buffer.buffer, 0, vk::IndexType::eUint32);
 		frame.cmd_buffer.drawIndexed(m_Count, 1, 0, 0, 0);
 	}
+
+	/*
+	void IndexBuffer::draw(const std::initializer_list<VertexBuffer>& vertex_buffers, Renderer& renderer) const
+	{
+		Frame& frame = renderer.current_frame();
+
+		Na::ArrayVector<vk::Buffer> buffers(vertex_buffers.size());
+		for (u64 i = 0; const VertexBuffer& buffer : vertex_buffers)
+			buffers[i++] = buffer.buffer().buffer;
+		vk::DeviceSize offsets[] = { 0, 24 * 12 };
+
+		frame.cmd_buffer.bindVertexBuffers(0, 2, buffers.ptr(), offsets);
+		frame.cmd_buffer.bindIndexBuffer(m_Buffer.buffer, 0, vk::IndexType::eUint32);
+		frame.cmd_buffer.drawIndexed(m_Count, 1, 0, 0, 0);
+	}
+	*/
 } // namespace Na

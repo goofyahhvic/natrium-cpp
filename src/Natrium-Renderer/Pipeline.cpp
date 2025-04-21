@@ -32,32 +32,40 @@ namespace Na {
 		Na::ArrayVector<vk::VertexInputAttributeDescription>
 	>
 		GetVertexInputInfo(
-			const VertexBufferLayout& vertex_buffer_layout
+			const ShaderAttributeLayout& vertex_buffer_layout
 		)
 	{
 		if (!vertex_buffer_layout.size())
 			return { {}, {} };
 
-		Na::ArrayVector<vk::VertexInputBindingDescription> binding_descriptions(1);
-		Na::ArrayVector<vk::VertexInputAttributeDescription> attribute_descriptions(vertex_buffer_layout.size());
+		Na::ArrayVector<vk::VertexInputBindingDescription> binding_descriptions(vertex_buffer_layout.size());
 
-		u32 offset = 0;
-		for (size_t i = 0; const ShaderAttribute& attribute : vertex_buffer_layout)
+		u64 attribute_count = 0;
+		for (const auto& binding : vertex_buffer_layout)
+			attribute_count += binding.size();
+
+		Na::ArrayVector<vk::VertexInputAttributeDescription> attribute_descriptions(attribute_count);
+
+		for (u64 i = 0; const auto& binding : vertex_buffer_layout)
 		{
+			u32 offset = 0;
+			for (u64 j = 0; const auto& attribute : binding)
+			{
+				attribute_descriptions[i + j * binding_descriptions.size()].binding = i;
+				attribute_descriptions[i + j * binding_descriptions.size()].location = attribute.location;
+				attribute_descriptions[i + j * binding_descriptions.size()].format = shaderAttributeTypeToVk(attribute.type);
+				attribute_descriptions[i + j * binding_descriptions.size()].offset = offset;
 
-			attribute_descriptions[i].binding = 0;
-			attribute_descriptions[i].location = attribute.location;
-			attribute_descriptions[i].format = shaderAttributeTypeToVk(attribute.type);
-			attribute_descriptions[i].offset = offset;
+				offset += SizeOf(attribute.type);
+				j++;
+			}
 
-			offset += SizeOf(attribute.type);
+			binding_descriptions[i].binding = i;
+			binding_descriptions[i].stride = offset;
+			binding_descriptions[i].inputRate = vk::VertexInputRate::eVertex;
 
 			i++;
 		}
-
-		binding_descriptions[0].binding = 0;
-		binding_descriptions[0].stride = offset;
-		binding_descriptions[0].inputRate = vk::VertexInputRate::eVertex;
 
 		return { binding_descriptions, attribute_descriptions };
 	}
@@ -125,7 +133,7 @@ namespace Na {
 	Pipeline::Pipeline(
 		Renderer& renderer,
 		const PipelineShaderInfos& shader_infos,
-		const VertexBufferLayout& vertex_buffer_layout,
+		const ShaderAttributeLayout& vertex_buffer_layout,
 		const ShaderUniformLayout& uniform_data_layout
 	)
 	: m_Handle(VkContext::GetPipelinePool().emplace())

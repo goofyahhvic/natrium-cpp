@@ -7,11 +7,6 @@
 namespace Na {
 	using PipelineShaderInfos = std::initializer_list<vk::PipelineShaderStageCreateInfo>;
 
-	enum class BufferType : uint8_t {
-		None = 0,
-		Vertex, Index, Uniform
-	};
-
 	enum class ShaderAttributeType : u8 {
 		None = 0,
 		Vec2, Vec3, Vec4,
@@ -33,7 +28,9 @@ namespace Na {
 		u8 location;
 		ShaderAttributeType type;
 	};
-	using VertexBufferLayout = std::initializer_list<ShaderAttribute>;
+
+	using ShaderAttributeBinding = std::initializer_list<ShaderAttribute>;
+	using ShaderAttributeLayout = std::initializer_list<ShaderAttributeBinding>;
 
 	enum class ShaderUniformType : u8 {
 		None = 0,
@@ -62,7 +59,7 @@ namespace Na {
 		Pipeline(
 			Renderer& renderer,
 			const PipelineShaderInfos& handles = {},
-			const VertexBufferLayout& vertex_buffer_layout = {},
+			const ShaderAttributeLayout& vertex_buffer_layout = {},
 			const ShaderUniformLayout& uniform_data_layout = {}
 		);
 		void destroy(void);

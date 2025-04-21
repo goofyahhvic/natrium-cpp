@@ -11,7 +11,7 @@ namespace Na {
 
 		void set_data(u32* data, Renderer& renderer);
 
-		void draw(const VertexBuffer& vbo, Renderer& renderer) const;
+		void draw(const VertexBuffer& vertex_buffer, Renderer& renderer) const;
 
 		[[nodiscard]] inline u64 size(void) const { return m_Buffer.size; }
 		[[nodiscard]] inline u32 count(void) const { return m_Count; }

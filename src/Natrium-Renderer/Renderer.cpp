@@ -199,9 +199,6 @@ namespace Na {
 		vk::Device logical_device = VkContext::GetLogicalDevice();
 		Frame& frame = m_Frames[m_CurrentFrame];
 
-		if (!frame)
-			return;
-
 		vk::Result result = vk::Result::eSuccess;
 
 		frame.cmd_buffer.endRenderPass();
