@@ -146,6 +146,31 @@ namespace Na {
 			}
 
 		});
+		glfwSetWindowIconifyCallback(_window, [](GLFWwindow* window, int iconified)
+		{
+			Window* __window = (Window*)glfwGetWindowUserPointer(window);
+			if (iconified)
+			{
+				__window->m_Minimized = true;
+				Context::GetEventQueue().emplace(Event{
+					.window_minimized = {
+						Event_Type::WindowMinimized,
+						__window,
+						false
+					}
+				});
+			} else
+			{
+				__window->m_Minimized = false;
+				Context::GetEventQueue().emplace(Event{
+					.window_restored = {
+						Event_Type::WindowRestored,
+						__window,
+						false
+					}
+				});
+			}
+		});
 		glfwSetCursorPosCallback(_window, [](GLFWwindow* window, double x, double y)
 		{
 			Window* __window = (Window*)glfwGetWindowUserPointer(window);

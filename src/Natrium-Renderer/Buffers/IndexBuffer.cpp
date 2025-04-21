@@ -41,11 +41,15 @@ namespace Na {
 
 	void IndexBuffer::draw(const VertexBuffer& vbo, Renderer& renderer) const
 	{
+		Frame& frame = renderer.current_frame();
+		if (!frame)
+			return;
+
 		vk::Buffer vertex_buffers[] = { vbo.buffer().buffer };
 		vk::DeviceSize offsets[] = { 0 };
 
-		renderer.current_graphics_cmd_buffer().bindVertexBuffers(0, 1, vertex_buffers, offsets);
-		renderer.current_graphics_cmd_buffer().bindIndexBuffer(m_Buffer.buffer, 0, vk::IndexType::eUint32);
-		renderer.current_graphics_cmd_buffer().drawIndexed(m_Count, 1, 0, 0, 0);
+		frame.cmd_buffer.bindVertexBuffers(0, 1, vertex_buffers, offsets);
+		frame.cmd_buffer.bindIndexBuffer(m_Buffer.buffer, 0, vk::IndexType::eUint32);
+		frame.cmd_buffer.drawIndexed(m_Count, 1, 0, 0, 0);
 	}
 } // namespace Na

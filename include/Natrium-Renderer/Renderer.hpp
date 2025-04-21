@@ -12,20 +12,31 @@ namespace Na {
 		float max_anisotropy;
 	};
 
+	struct Frame {
+		bool              skipped = false;
+
+		vk::CommandBuffer cmd_buffer;
+
+		vk::Semaphore     image_available_semaphore;
+		vk::Semaphore     render_finished_semaphore;
+		vk::Fence         in_flight_fence;
+
+		[[nodiscard]] inline operator bool(void) const { return !skipped; }
+	};
+
 	class Renderer {
 	public:
 		Renderer(Window& window);
 		void destroy(void);
 
-		void clear(const glm::vec4& color = Colors::k_Black);
+		Frame& clear(const glm::vec4& color = Colors::k_Black);
 		void present(void);
-
-		void update_size(void);
 
 		[[nodiscard]] inline RendererConfig config(void) const { return m_Config; }
 		[[nodiscard]] inline vk::CommandPool single_time_cmd_pool(void) const { return m_SingleTimeCmdPool; }
 
-		[[nodiscard]] inline vk::CommandBuffer current_graphics_cmd_buffer(void) const { return m_GraphicsCmdBuffers[m_CurrentFrame]; }
+		[[nodiscard]] inline Frame& current_frame(void) { return m_Frames[m_CurrentFrame]; }
+		[[nodiscard]] inline const Frame& current_frame(void) const { return m_Frames[m_CurrentFrame]; }
 
 		inline void bind_pipeline(u64 pipeline_handle) { m_PipelineHandle = pipeline_handle; }
 		[[nodiscard]] inline u64 pipeline_handle(void) const { return m_PipelineHandle; }
@@ -36,7 +47,7 @@ namespace Na {
 		inline void set_viewport(const glm::vec4& viewport);
 		[[nodiscard]] inline glm::vec4 viewport(void) const { return { m_Viewport.x, m_Viewport.y, m_Viewport.width, m_Viewport.height }; }
 
-		[[nodiscard]] inline u32 current_frame(void) const { return m_CurrentFrame; }
+		[[nodiscard]] inline u32 current_frame_index(void) const { return m_CurrentFrame; }
 	private:
 		void _create_window_surface(void);
 		void _create_swapchain(void);
@@ -60,8 +71,6 @@ namespace Na {
 			vk::Extent2D m_Extent;
 		};
 
-		bool m_HasResized;
-
 		QueueFamilyIndices m_QueueIndices;
 
 		vk::Viewport m_Viewport;
@@ -77,21 +86,13 @@ namespace Na {
 		vk::ImageView m_DepthImageView;
 
 		vk::RenderPass m_RenderPass;
-		Na::ArrayVector<vk::Framebuffer> m_Framebuffers;
+		ArrayVector<vk::Framebuffer> m_Framebuffers;
 
 		vk::CommandPool m_GraphicsCmdPool;
-		Na::ArrayVector<vk::CommandBuffer> m_GraphicsCmdBuffers;
-
 		vk::CommandPool m_SingleTimeCmdPool;
 
-		struct Sync {
-			Na::ArrayVector<vk::Semaphore> image_available;
-			Na::ArrayVector<vk::Semaphore> render_finished;
-			Na::ArrayVector<vk::Fence>     in_flight;
-		};
-		Sync m_Sync;
-
-		u32 m_CurrentFrame;
+		ArrayVector<Frame> m_Frames;
+		u32 m_CurrentFrame = 0;
 		u32 m_ImageIndex;
 
 		u64 m_PipelineHandle;

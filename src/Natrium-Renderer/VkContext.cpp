@@ -56,6 +56,15 @@ namespace Na {
 		//VK_EXT_DEPTH_RANGE_UNRESTRICTED_EXTENSION_NAME
 	};
 
+	vk::SurfaceKHR createWindowSurface(GLFWwindow* window)
+	{
+		VkSurfaceKHR surface;
+		VkResult result = glfwCreateWindowSurface(VkContext::GetInstance(), window, nullptr, &surface);
+		if (result != VK_SUCCESS)
+			throw std::runtime_error("Failed to create window surface!");
+		return surface;
+	}
+
 	static void populateDebugMessengerCreateInfo(vk::DebugUtilsMessengerCreateInfoEXT& create_info)
 	{
 		create_info.messageSeverity =
@@ -219,7 +228,9 @@ namespace Na {
 		populateDebugMessengerCreateInfo(create_info);
 
 		VkDebugUtilsMessengerEXT messenger;
-		VK_CHECK(CreateDebugUtilsMessengerEXT(instance, (VkDebugUtilsMessengerCreateInfoEXT*)&create_info, nullptr, &messenger));
+		VkResult result = CreateDebugUtilsMessengerEXT(instance, (VkDebugUtilsMessengerCreateInfoEXT*)&create_info, nullptr, &messenger);
+		if (result != VK_SUCCESS)
+			throw std::runtime_error("Failed to create vulkan debug messenger!");
 		return messenger;
 	}
 
@@ -280,6 +291,7 @@ namespace Na {
 	VkContext VkContext::Initialize(void)
 	{
 		VkContext context;
+		s_Context = &context;
 
 		g_Logger(Info, "Initializing vulkan!");
 
@@ -287,8 +299,7 @@ namespace Na {
 		context.m_DebugMessenger = createDebugMessenger(context.m_Instance);
 
 		GLFWwindow* temp_window = glfwCreateWindow(1, 1, "", nullptr, nullptr);
-		VkSurfaceKHR temp_surface;
-		VK_CHECK(glfwCreateWindowSurface(context.m_Instance, temp_window, nullptr, &temp_surface));
+		vk::SurfaceKHR temp_surface = createWindowSurface(temp_window);
 
 		context.m_PhysicalDevice = pickPhysicalDevice(context.m_Instance, temp_surface);
 		context.m_LogicalDevice = createLogicalDevice(context.m_PhysicalDevice, temp_surface, context.m_GraphicsQueue);
@@ -296,7 +307,6 @@ namespace Na {
 		vkDestroySurfaceKHR(context.m_Instance, temp_surface, nullptr);
 		glfwDestroyWindow(temp_window);
 
-		s_Context = &context;
 		return context;
 	}
 

@@ -70,7 +70,7 @@ namespace Na {
 
 	void UniformBuffer::set_data(void* data, Renderer& renderer)
 	{
-		memcpy(m_Mapped[renderer.current_frame()], data, m_Size);
+		memcpy(m_Mapped[renderer.current_frame_index()], data, m_Size);
 	}
 
 } // namespace Na

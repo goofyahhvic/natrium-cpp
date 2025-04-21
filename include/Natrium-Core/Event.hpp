@@ -19,7 +19,7 @@ namespace Na {
 	enum class Event_Type : uint8_t {
 		None = 0,
 		KeyPressed, KeyReleased,
-		WindowResized, WindowClosed, WindowFocused, WindowLostFocus,
+		WindowResized, WindowClosed, WindowFocused, WindowLostFocus, WindowMinimized, WindowRestored,
 		MouseMoved, MouseScrolled, MouseButtonPressed, MouseButtonReleased
 	};
 
@@ -55,6 +55,15 @@ namespace Na {
 		uint32_t padding1 = 0, padding2 = 0;
 	};
 
+	struct Event_WindowMinimized {
+		NA_EVENT_BASE(WindowMinimized);
+		uint32_t padding1 = 0, padding2 = 0;
+	};
+	struct Event_WindowRestored {
+		NA_EVENT_BASE(WindowRestored);
+		uint32_t padding1 = 0, padding2 = 0;
+	};
+
 	struct Event_MouseMoved {
 		NA_EVENT_BASE(MouseMoved);
 		float x, y;
@@ -70,7 +79,6 @@ namespace Na {
 		uint8_t button;
 		uint32_t padding = 0;
 	};
-
 	struct Event_MouseButtonReleased {
 		NA_EVENT_BASE(MouseButtonReleased);
 		uint8_t button;
@@ -93,6 +101,9 @@ namespace Na {
 
 		Event_WindowFocused window_focused;
 		Event_WindowLostFocus window_lost_focus;
+
+		Event_WindowMinimized window_minimized;
+		Event_WindowRestored window_restored;
 
 		Event_MouseMoved mouse_moved;
 		Event_MouseScrolled mouse_scrolled;

@@ -41,10 +41,14 @@ namespace Na {
 
 	void VertexBuffer::draw(Renderer& renderer) const
 	{
+		Frame& frame = renderer.current_frame();
+		if (!frame)
+			return;
+
 		vk::Buffer vertex_buffers[] = { m_Buffer.buffer };
 		vk::DeviceSize offsets[] = { 0 };
 
-		renderer.current_graphics_cmd_buffer().bindVertexBuffers(0, 1, vertex_buffers, offsets);
-		renderer.current_graphics_cmd_buffer().draw(m_Count, 1, 0, 0);
+		frame.cmd_buffer.bindVertexBuffers(0, 1, vertex_buffers, offsets);
+		frame.cmd_buffer.draw(m_Count, 1, 0, 0);
 	}
 } // namespace Na
