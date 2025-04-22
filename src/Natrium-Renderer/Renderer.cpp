@@ -255,6 +255,20 @@ namespace Na {
 		m_CurrentFrame = (m_CurrentFrame + 1) % m_Config.max_frames_in_flight;
 	}
 
+	void Renderer::set_push_constant(PushConstant push_constant, void* data)
+	{
+		Frame& frame = m_Frames[m_CurrentFrame];
+		PipelineData& pipeline = VkContext::GetPipelinePool()[m_PipelineHandle];
+
+		frame.cmd_buffer.pushConstants(
+			pipeline.layout,
+			(vk::ShaderStageFlagBits)push_constant.shader_stage,
+			push_constant.offset,
+			push_constant.size,
+			data
+		);
+	}
+
 	void Renderer::_create_window_surface(void)
 	{
 		m_Surface = createWindowSurface(m_Window->native());

@@ -44,6 +44,8 @@ namespace Na {
 	};
 	using ShaderUniformLayout = std::initializer_list<ShaderUniform>;
 
+	using PushConstantLayout = std::initializer_list<PushConstant>;
+
 	struct PipelineData {
 		vk::Pipeline pipeline;
 
@@ -60,7 +62,8 @@ namespace Na {
 			Renderer& renderer,
 			const PipelineShaderInfos& handles = {},
 			const ShaderAttributeLayout& vertex_buffer_layout = {},
-			const ShaderUniformLayout& uniform_data_layout = {}
+			const ShaderUniformLayout& uniform_data_layout = {},
+			const PushConstantLayout& push_constant_layout = {}
 		);
 		void destroy(void);
 

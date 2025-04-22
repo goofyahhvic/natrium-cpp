@@ -4,8 +4,15 @@
 #include "Natrium-Core/Window.hpp"
 #include "./DeviceImage.hpp"
 #include "./Colors.hpp"
+#include "./Shader.hpp"
 
 namespace Na {
+	struct PushConstant {
+		ShaderStageBits shader_stage;
+		u32 size;
+		u32 offset = 0;
+	};
+
 	struct RendererConfig {
 		u32 max_frames_in_flight;
 		bool anisotropy_enabled;
@@ -31,6 +38,8 @@ namespace Na {
 
 		Frame& clear(const glm::vec4& color = Colors::k_Black);
 		void present(void);
+
+		void set_push_constant(PushConstant push_constant, void* data);
 
 		[[nodiscard]] inline RendererConfig config(void) const { return m_Config; }
 		[[nodiscard]] inline vk::CommandPool single_time_cmd_pool(void) const { return m_SingleTimeCmdPool; }

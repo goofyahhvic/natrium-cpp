@@ -46,7 +46,7 @@ namespace Na {
 
 		Na::ArrayVector<vk::VertexInputAttributeDescription> attribute_descriptions(attribute_count);
 
-		for (u64 i = 0; const auto& binding : vertex_buffer_layout)
+		for (u32 i = 0; const auto& binding : vertex_buffer_layout)
 		{
 			u32 offset = 0;
 			for (u64 j = 0; const auto& attribute : binding)
@@ -91,15 +91,6 @@ namespace Na {
 		return VkContext::GetLogicalDevice().createDescriptorSetLayout(create_info);
 	}
 
-	static vk::PipelineLayout createPipelineLayout(u64 descriptor_set_layout_count, vk::DescriptorSetLayout* descriptor_set_layouts)
-	{
-		vk::PipelineLayoutCreateInfo create_info;
-		create_info.setLayoutCount = (u32)descriptor_set_layout_count;
-		create_info.pSetLayouts = descriptor_set_layouts;
-
-		return VkContext::GetLogicalDevice().createPipelineLayout(create_info);
-	}
-
 	static vk::DescriptorPool createDescriptorPool(const ShaderUniformLayout& descriptor_layout, u32 max_frames_in_flight)
 	{
 		Na::ArrayVector<vk::DescriptorPoolSize> pool_sizes(descriptor_layout.size());
@@ -134,7 +125,8 @@ namespace Na {
 		Renderer& renderer,
 		const PipelineShaderInfos& shader_infos,
 		const ShaderAttributeLayout& vertex_buffer_layout,
-		const ShaderUniformLayout& uniform_data_layout
+		const ShaderUniformLayout& uniform_data_layout,
+		const PushConstantLayout& push_constant_layout
 	)
 	: m_Handle(VkContext::GetPipelinePool().emplace())
 	{
@@ -163,13 +155,25 @@ namespace Na {
 		auto depth_stencil_info = depthStencilInfo();
 
 		if (uniform_data_layout.size())
-		{
 			pipeline.descriptor_set_layout = createDescriptorSetLayout(uniform_data_layout);
-			pipeline.layout = createPipelineLayout(1, &pipeline.descriptor_set_layout);
-		} else
+
+		Na::ArrayVector<vk::PushConstantRange> push_constant_ranges(push_constant_layout.size());
+
+		for (u64 i = 0; const auto& push_constant : push_constant_layout)
 		{
-			pipeline.layout = createPipelineLayout(0, nullptr);
+			push_constant_ranges[i].stageFlags = (vk::ShaderStageFlagBits)push_constant.shader_stage;
+			push_constant_ranges[i].offset = push_constant.offset;
+			push_constant_ranges[i].size = push_constant.size;
+			i++;
 		}
+
+		pipeline.layout = VkContext::GetLogicalDevice().createPipelineLayout(
+			vk::PipelineLayoutCreateInfo(
+				{}, // flags
+				(bool)pipeline.descriptor_set_layout, uniform_data_layout.size() ? &pipeline.descriptor_set_layout : nullptr,
+				(u32)push_constant_ranges.size(), push_constant_ranges.ptr()
+			)
+		);
 
 		vk::GraphicsPipelineCreateInfo create_info;
 
