@@ -2,7 +2,7 @@
 #include "Natrium-Core/Input.hpp"
 
 namespace Na {
-	void Input::on_event(const Event& e)
+	inline void Input::on_event(const Event& e)
 	{
 		switch (e.type)
 		{

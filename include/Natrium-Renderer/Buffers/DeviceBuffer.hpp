@@ -7,11 +7,11 @@ namespace Na {
 	u32 FindMemoryType(u32 typeFilter, vk::MemoryPropertyFlags properties);
 	class DeviceBuffer {
 	public:
-		vk::Buffer buffer;
-		vk::DeviceSize size;
-		vk::DeviceMemory memory;
+		vk::Buffer buffer = nullptr;
+		vk::DeviceSize size = 0;
+		vk::DeviceMemory memory = nullptr;
 
-		DeviceBuffer(void) : size(0) {}
+		DeviceBuffer(void) = default;
 		DeviceBuffer(
 			vk::DeviceSize size,
 			vk::BufferUsageFlags usage,
@@ -19,6 +19,13 @@ namespace Na {
 			vk::SharingMode sharing_mode = vk::SharingMode::eExclusive
 		);
 		void destroy(void);
+		inline ~DeviceBuffer(void) { this->destroy(); }
+
+		DeviceBuffer(const DeviceBuffer& other) = delete;
+		DeviceBuffer& operator=(const DeviceBuffer& other) = delete;
+
+		DeviceBuffer(DeviceBuffer&& other);
+		DeviceBuffer& operator=(DeviceBuffer&& other);
 
 		void copy(const DeviceBuffer& other, vk::CommandPool cmd_pool);
 

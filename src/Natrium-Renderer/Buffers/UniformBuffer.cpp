@@ -53,6 +53,9 @@ namespace Na {
 
 	void UniformBuffer::destroy(void)
 	{
+		if (!m_Size)
+			return;
+
 		vk::Device logical_device = VkContext::GetLogicalDevice();
 
 		for (u64 i = 0; i < m_Buffers.size(); i++)
@@ -73,4 +76,28 @@ namespace Na {
 		memcpy(m_Mapped[renderer.current_frame_index()], data, m_Size);
 	}
 
+	UniformBuffer::UniformBuffer(UniformBuffer&& other)
+	: m_Buffers(std::move(other.m_Buffers)),
+	m_Memories(std::move(other.m_Memories)),
+    m_Mapped(std::move(other.m_Mapped)),
+	m_Size(std::exchange(other.m_Size, 0))
+	{}
+
+	UniformBuffer& UniformBuffer::operator=(UniformBuffer&& other)
+	{
+		vk::Device logical_device = VkContext::GetLogicalDevice();
+
+		for (u64 i = 0; i < m_Buffers.size(); i++)
+		{
+			logical_device.destroyBuffer(m_Buffers[i]);
+			logical_device.freeMemory(m_Memories[i]);
+		}
+
+		m_Buffers = std::move(other.m_Buffers);
+		m_Memories = std::move(other.m_Memories);
+		m_Mapped = std::move(other.m_Mapped);
+		m_Size = std::exchange(other.m_Size, 0);
+
+		return *this;
+	}
 } // namespace Na

@@ -59,6 +59,27 @@ namespace Na {
 		return glfwGetWindowTitle(m_Window);
 	}
 
+	WindowImpl_GLFW::WindowImpl_GLFW(WindowImpl_GLFW&& other)
+	: m_Window(std::exchange(other.m_Window, nullptr)),
+	m_Width(std::exchange(other.m_Width, 0)),
+	m_Height(std::exchange(other.m_Height, 0)),
+	m_Focus(other.m_Focus),
+	m_Minimized(other.m_Minimized)
+	{}
+
+	WindowImpl_GLFW& WindowImpl_GLFW::operator=(WindowImpl_GLFW&& other)
+	{
+		glfwDestroyWindow(m_Window);
+
+		m_Window = std::exchange(other.m_Window, nullptr);
+		m_Width = std::exchange(other.m_Width, 0);
+		m_Height = std::exchange(other.m_Height, 0);
+		m_Focus = other.m_Focus;
+		m_Minimized = other.m_Minimized;
+
+		return *this;
+	}
+
 	void Window_SetGLFWCallbacks(GLFWwindow* _window)
 	{
 		glfwSetKeyCallback(_window, [](GLFWwindow* window, int key, int scancode, int action, int mods)

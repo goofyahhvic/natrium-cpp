@@ -217,21 +217,24 @@ namespace Na {
 		vk::Device logical_device = VkContext::GetLogicalDevice();
 		PipelineData& pipeline = VkContext::GetPipelinePool()[m_Handle];
 
-		if (pipeline.descriptor_pool)
-			logical_device.destroyDescriptorPool(pipeline.descriptor_pool);
-
-		if (pipeline.pipeline)
-			logical_device.destroyPipeline(pipeline.pipeline);
-
-		if (pipeline.descriptor_set_layout)
-			logical_device.destroyDescriptorSetLayout(pipeline.descriptor_set_layout);
-
-		if (pipeline.layout)
-			logical_device.destroyPipelineLayout(pipeline.layout);
+		logical_device.destroyDescriptorPool(pipeline.descriptor_pool);
+		logical_device.destroyPipeline(pipeline.pipeline);
+		logical_device.destroyDescriptorSetLayout(pipeline.descriptor_set_layout);
+		logical_device.destroyPipelineLayout(pipeline.layout);
 
 		pipeline.descriptor_sets.~ArrayVector();
 		memset(&pipeline, 0, sizeof(PipelineData));
 
 		m_Handle = NA_INVALID_HANDLE;
+	}
+
+	Pipeline::Pipeline(Pipeline&& other)
+	: m_Handle(std::exchange(other.m_Handle, NA_INVALID_HANDLE))
+	{}
+
+	Pipeline& Pipeline::operator=(Pipeline&& other)
+	{
+		m_Handle = std::exchange(other.m_Handle, NA_INVALID_HANDLE);
+		return *this;
 	}
 } // namespace Na

@@ -149,21 +149,19 @@ namespace Na {
 		return VkContext::GetLogicalDevice().createShaderModule(create_info);
 	}
 
-	Shader::Shader(
-		const std::filesystem::path& path,
-		ShaderStageBits stage,
-		const std::string_view& entry_point
-	)
-	: m_Stage(stage),
-	m_EntryPoint(entry_point),
-	m_Module(createShaderModule(path, entry_point))
-	{
-
-	}
+	Shader::Shader(const std::filesystem::path& path, ShaderStageBits stage, const std::string_view& entry_point)
+	: stage(stage),
+	entry_point(entry_point),
+	module(createShaderModule(path, entry_point))
+	{}
 
 	void Shader::destroy(void)
 	{
-		VkContext::GetLogicalDevice().destroyShaderModule(m_Module);
+		if (!this->module)
+			return;
+
+		VkContext::GetLogicalDevice().destroyShaderModule(this->module);
+		this->module = nullptr;
 	}
 
 } // namespace Na

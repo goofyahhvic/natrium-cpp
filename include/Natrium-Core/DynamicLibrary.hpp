@@ -5,11 +5,17 @@
 #include "./Logger.hpp"
 
 namespace Na {
-	class DLL {
+	class DynamicLibrary {
 	public:
-		inline DLL(void) { m_Handle = nullptr; }
-		inline DLL(const std::string_view& name) { this->load(name); }
-		inline ~DLL(void) { this->unload(); }
+		DynamicLibrary(void) = default;
+		inline DynamicLibrary(const std::string_view& name) { this->load(name); }
+		inline ~DynamicLibrary(void) { this->unload(); }
+
+		DynamicLibrary(const DynamicLibrary& other) = delete;
+		DynamicLibrary& operator=(const DynamicLibrary& other) = delete;
+
+		DynamicLibrary(DynamicLibrary&& other);
+		DynamicLibrary& operator=(DynamicLibrary&& other);
 
 		void load(const std::string_view& name);
 		void unload(void);
@@ -25,7 +31,6 @@ namespace Na {
 		void* m_Handle = nullptr;
 		std::string_view m_Name;
 	};
-	using DynamicLibrary = DLL;
 } // namespace Na
 
 #endif // NA_DYNAMIC_LIBRARY_HPP

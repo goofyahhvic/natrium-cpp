@@ -10,8 +10,8 @@ namespace Na {
 
 	class DeviceImage {
 	public:
-		vk::Image img;
-		vk::DeviceMemory memory;
+		vk::Image img = nullptr;
+		vk::DeviceMemory memory = nullptr;
 
 		union {
 			vk::Extent3D extent;
@@ -19,12 +19,10 @@ namespace Na {
 				u32 width, height, depth;
 			};
 		};
-		vk::Format format;
+		vk::Format format = vk::Format::eUndefined;
 		vk::ImageSubresourceRange subresource_range;
 
-		DeviceImage(void)
-		: img(nullptr), memory(nullptr), extent({}), format(vk::Format::eUndefined)
-		{}
+		DeviceImage(void) {};
 		DeviceImage(
 			const vk::Extent3D& extent,
 			vk::ImageAspectFlagBits aspect_mask,
@@ -37,6 +35,12 @@ namespace Na {
 		);
 		void destroy(void);
 
+		DeviceImage(const DeviceImage& other) = delete;
+		DeviceImage& operator=(const DeviceImage& other) = delete;
+
+		DeviceImage(DeviceImage&& other);
+		DeviceImage& operator=(DeviceImage&& other);
+
 		void transition_layout(
 			vk::ImageLayout old_layout,
 			vk::ImageLayout new_layout,
@@ -44,6 +48,8 @@ namespace Na {
 		);
 
 		void copy_from_buffer(vk::Buffer buffer, vk::CommandPool cmd_pool);
+
+		[[nodiscard]] inline operator bool(void) const { return format != vk::Format::eUndefined; }
 	};
 
 	vk::ImageView CreateImageView(vk::Image img, vk::ImageAspectFlagBits aspect_mask, vk::Format format);

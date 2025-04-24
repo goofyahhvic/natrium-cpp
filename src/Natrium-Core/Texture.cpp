@@ -104,16 +104,32 @@ namespace Na {
 
 	void Texture::destroy(void)
 	{
+		if (!m_Image)
+			return;
+
 		vk::Device logical_device = VkContext::GetLogicalDevice();
 
-		if (m_Sampler)
-			logical_device.destroySampler(m_Sampler);
+		logical_device.destroySampler(m_Sampler);
 		m_Sampler = nullptr;
 
-		if (m_ImageView)
-			logical_device.destroyImageView(m_ImageView);
+		logical_device.destroyImageView(m_ImageView);
 		m_ImageView = nullptr;
 
 		m_Image.destroy();
+	}
+
+	Texture::Texture(Texture&& other)
+	: m_Image(std::move(other.m_Image)),
+	m_ImageView(std::exchange(other.m_ImageView, nullptr)),
+	m_Sampler(std::exchange(other.m_Sampler, nullptr))
+	{}
+
+	Texture& Texture::operator=(Texture&& other)
+	{
+		this->destroy();
+		m_Image = std::move(other.m_Image);
+		m_ImageView = std::exchange(other.m_ImageView, nullptr);
+		m_Sampler = std::exchange(other.m_Sampler, nullptr);
+		return *this;
 	}
 } // namespace Na

@@ -184,6 +184,25 @@ namespace Na {
 		EndSingleTimeCommands(cmd_buffer, cmd_pool);
 	}
 
+	DeviceImage::DeviceImage(DeviceImage&& other)
+	: img(std::exchange(other.img, nullptr)),
+	memory(std::exchange(other.memory, nullptr)),
+	extent(std::exchange(other.extent, { 0, 0, 0 })),
+	format(std::exchange(other.format, vk::Format::eUndefined)),
+	subresource_range(std::move(other.subresource_range))
+	{}
+
+	DeviceImage& DeviceImage::operator=(DeviceImage&& other)
+	{
+		this->destroy();
+		this->img = std::exchange(other.img, nullptr);
+		this->memory = std::exchange(other.memory, nullptr);
+		this->extent = std::exchange(other.extent, { 0, 0, 0 });
+		this->format = std::exchange(other.format, vk::Format::eUndefined);
+		this->subresource_range = std::move(other.subresource_range);
+		return *this;
+	}
+
 	vk::ImageView CreateImageView(
 		vk::Image img,
 		vk::ImageAspectFlagBits aspect_mask,

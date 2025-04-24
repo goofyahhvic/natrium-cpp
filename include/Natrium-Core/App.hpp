@@ -1,32 +1,22 @@
-#if !defined(NEO_APP_HPP)
-#define NEO_APP_HPP
+#if !defined(NA_APP_HPP)
+#define NA_APP_HPP
 
 #include "./Event.hpp"
 
 namespace Na {
-	enum class App_SystemType : u8 {
-		None = 0, Init, Shutdown, Update, OnEvent
-	};
-
-	struct App_Systems {
-		ArrayList<void(*)(void)> init;
-		ArrayList<void(*)(void)> shutdown;
-
-		ArrayList<void(*)(double dt)> update;
-		ArrayList<void(*)(Event& e)> on_event;
-	};
-	
 	class App {
 	public:
-		inline App(void) = default;
-		inline ~App(void) noexcept(false) = default;
+		bool should_close = false;
+	public:
+		App(void) = default;
+		virtual ~App(void) = default;
+
 		void run(void);
 
-		void add_system(void* fn, App_SystemType type);
-	public:
-		bool should_close = false;
-		App_Systems subsystems;
+		inline virtual void on_event(Event& e) { if (e.type == Event_Type::WindowClosed) this->should_close = true; }
+		inline virtual void update(double dt) {}
+		inline virtual void draw(void) {}
 	};
 } // namespace Neo
 
-#endif // NEO_APP_HPP
+#endif // NA_APP_HPP

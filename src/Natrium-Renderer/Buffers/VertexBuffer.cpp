@@ -3,11 +3,13 @@
 
 #include "Natrium-Renderer/VkContext.hpp"
 
+#include "Natrium-Core/Logger.hpp"
+
 namespace Na {
-	VertexBuffer::VertexBuffer(void* data, u64 size, u32 count, Renderer& renderer)
+	VertexBuffer::VertexBuffer(u32 count, u32 vertex_size, void* data, Renderer& renderer)
 	: m_Count(count),
 	m_Buffer(
-		size,
+		(u64)vertex_size * count,
 		vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer,
 		vk::MemoryPropertyFlagBits::eDeviceLocal
 	)
@@ -17,6 +19,9 @@ namespace Na {
 
 	void VertexBuffer::destroy(void)
 	{
+		if (!m_Count)
+			return;
+
 		m_Buffer.destroy();
 	}
 
@@ -46,5 +51,18 @@ namespace Na {
 		vk::DeviceSize offsets[] = { 0 };
 		frame.cmd_buffer.bindVertexBuffers(0, 1, &m_Buffer.buffer, offsets);
 		frame.cmd_buffer.draw(m_Count, 1, 0, 0);
+	}
+
+	VertexBuffer::VertexBuffer(VertexBuffer&& other)
+	: m_Buffer(std::move(other.m_Buffer)),
+	m_Count(std::exchange(other.m_Count, 0))
+	{}
+
+	VertexBuffer& VertexBuffer::operator=(VertexBuffer&& other)
+	{
+		this->destroy();
+		m_Buffer = std::move(other.m_Buffer);
+		m_Count = std::exchange(other.m_Count, 0);
+		return *this;
 	}
 } // namespace Na

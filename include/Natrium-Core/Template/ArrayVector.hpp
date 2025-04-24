@@ -174,4 +174,4 @@ namespace Na {
 	};
 } // namespace Na
 
-#endif // NEO_ARRAY_VECTOR_HPP
+#endif // NA_ARRAY_VECTOR_HPP

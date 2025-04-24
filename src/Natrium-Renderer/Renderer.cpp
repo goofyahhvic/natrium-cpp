@@ -40,8 +40,7 @@ namespace Na {
 	}
 
 	Renderer::Renderer(Window& window)
-	: m_Window(&window),
-	m_PipelineHandle(NA_INVALID_HANDLE)
+	: m_Window(&window)
 	{
 		m_Config = RendererConfig{
 			.max_frames_in_flight = 2,
@@ -62,6 +61,9 @@ namespace Na {
 
 	void Renderer::destroy(void)
 	{
+		if (!m_Window)
+			return;
+
 		vk::Device logical_device = VkContext::GetLogicalDevice();
 
 		for (Frame& frame : m_Frames)
@@ -69,36 +71,27 @@ namespace Na {
 			logical_device.destroyFence(frame.in_flight_fence);
 			logical_device.destroySemaphore(frame.render_finished_semaphore);
 			logical_device.destroySemaphore(frame.image_available_semaphore);
-
 		}
 
-		if (m_SingleTimeCmdPool)
-			logical_device.destroyCommandPool(m_SingleTimeCmdPool);
-
-		if (m_GraphicsCmdPool)
-			logical_device.destroyCommandPool(m_GraphicsCmdPool);
+		logical_device.destroyCommandPool(m_SingleTimeCmdPool);
+		logical_device.destroyCommandPool(m_GraphicsCmdPool);
 
 		for (vk::Framebuffer framebuffer : m_Framebuffers)
 			logical_device.destroyFramebuffer(framebuffer);
 
-		if (m_RenderPass)
-			logical_device.destroyRenderPass(m_RenderPass);
+		logical_device.destroyRenderPass(m_RenderPass);
 
-		if (m_DepthImage.img)
-			m_DepthImage.destroy();
-
-		if (m_DepthImageView)
-			logical_device.destroyImageView(m_DepthImageView);
+		m_DepthImage.destroy();
+		logical_device.destroyImageView(m_DepthImageView);
 
 		for (auto& img_view : m_ImageViews)
-			if (img_view)
-				logical_device.destroyImageView(img_view);
+			logical_device.destroyImageView(img_view);
 
-		if (m_Swapchain)
-			logical_device.destroySwapchainKHR(m_Swapchain);
+		logical_device.destroySwapchainKHR(m_Swapchain);
 
-		if (m_Surface)
-			VkContext::GetInstance().destroySurfaceKHR(m_Surface);
+		VkContext::GetInstance().destroySurfaceKHR(m_Surface);
+
+		m_Window = nullptr;
 	}
 
 	Frame& Renderer::clear(const glm::vec4& color)
@@ -585,5 +578,86 @@ namespace Na {
 		VkContext::GetGraphicsQueue().waitIdle();
 
 		VkContext::GetLogicalDevice().freeCommandBuffers(cmd_pool, 1, &cmd_buffer);
+	}
+
+	Renderer::Renderer(Renderer&& other)
+	: m_Window(std::exchange(other.m_Window, nullptr)),
+	m_Surface(std::exchange(other.m_Surface, nullptr)),
+
+	m_Width(other.m_Width),
+	m_Height(other.m_Height),
+
+	m_QueueIndices(std::move(other.m_QueueIndices)),
+
+	m_Viewport(std::move(other.m_Viewport)),
+	m_Scissor(std::move(other.m_Scissor)),
+
+	m_Swapchain(std::exchange(other.m_Swapchain, nullptr)),
+	m_SwapchainFormat(std::move(other.m_SwapchainFormat)),
+
+	m_Images(std::move(other.m_Images)),
+	m_ImageViews(std::move(other.m_ImageViews)),
+
+	m_DepthImage(std::move(other.m_DepthImage)),
+	m_DepthImageView(std::exchange(other.m_DepthImageView, nullptr)),
+
+	m_RenderPass(std::exchange(other.m_RenderPass, nullptr)),
+
+	m_Framebuffers(std::move(other.m_Framebuffers)),
+
+	m_GraphicsCmdPool(std::exchange(other.m_GraphicsCmdPool, nullptr)),
+	m_SingleTimeCmdPool(std::exchange(other.m_SingleTimeCmdPool, nullptr)),
+
+	m_Frames(std::move(other.m_Frames)),
+
+	m_CurrentFrame(other.m_CurrentFrame),
+	m_ImageIndex(other.m_ImageIndex),
+
+	m_PipelineHandle(other.m_PipelineHandle),
+
+	m_Config(std::move(other.m_Config))
+	{}
+
+	Renderer& Renderer::operator=(Renderer&& other)
+	{
+		this->destroy();
+
+		m_Window = std::exchange(other.m_Window, nullptr);
+		m_Surface = std::exchange(other.m_Surface, nullptr);
+
+		m_Width = other.m_Width;
+		m_Height = other.m_Height;
+
+		m_QueueIndices = std::move(other.m_QueueIndices);
+
+		m_Viewport = std::move(other.m_Viewport);
+		m_Scissor = std::move(other.m_Scissor);
+
+		m_Swapchain = std::exchange(other.m_Swapchain, nullptr);
+		m_SwapchainFormat = std::move(other.m_SwapchainFormat);
+
+		m_Images = std::move(other.m_Images);
+		m_ImageViews = std::move(other.m_ImageViews);
+
+		m_DepthImage = std::move(other.m_DepthImage);
+		m_DepthImageView = std::exchange(other.m_DepthImageView, nullptr);
+
+		m_RenderPass = std::exchange(other.m_RenderPass, nullptr);
+
+		m_Framebuffers = std::move(other.m_Framebuffers);
+
+		m_GraphicsCmdPool = std::exchange(other.m_GraphicsCmdPool, nullptr);
+		m_SingleTimeCmdPool = std::exchange(other.m_SingleTimeCmdPool, nullptr);
+
+		m_Frames = std::move(other.m_Frames);
+
+		m_CurrentFrame = other.m_CurrentFrame;
+		m_ImageIndex = other.m_ImageIndex;
+
+		m_PipelineHandle = other.m_PipelineHandle;
+
+		m_Config = std::move(other.m_Config);
+
+		return *this;
 	}
 } // namespace Na

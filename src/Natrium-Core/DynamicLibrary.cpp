@@ -10,7 +10,7 @@
 #endif // NA_PLATFORM_WINDOWS
 
 namespace Na {
-	void DLL::load(const std::string_view& name)
+	void DynamicLibrary::load(const std::string_view& name)
 	{
 		if (name.empty())
 			return;
@@ -33,7 +33,7 @@ namespace Na {
 		NA_ASSERT(m_Handle, "Failed to load library {}", dir.string());
 	}
 
-	void DLL::unload(void)
+	void DynamicLibrary::unload(void)
 	{
 		if (!m_Handle)
 			return;
@@ -48,7 +48,7 @@ namespace Na {
 		m_Name = "";
 	}
 
-	void* DLL::fn(const char* name) const
+	void* DynamicLibrary::fn(const char* name) const
 	{
 		if (!m_Handle)
 			return nullptr;
@@ -59,5 +59,18 @@ namespace Na {
 		return dlsym(m_Handle, name);
 	#endif
 		return nullptr;
+	}
+
+	DynamicLibrary::DynamicLibrary(DynamicLibrary&& other)
+	: m_Handle(std::exchange(other.m_Handle, nullptr)),
+	m_Name(std::move(other.m_Name))
+	{}
+
+	DynamicLibrary& DynamicLibrary::operator=(DynamicLibrary&& other)
+	{
+		this->unload();
+		m_Handle = std::exchange(other.m_Handle, nullptr);
+		m_Name = std::move(other.m_Name);
+		return *this;
 	}
 } // namespace Na

@@ -4,7 +4,7 @@
 #include "Natrium-Renderer/VkContext.hpp"
 
 namespace Na {
-	IndexBuffer::IndexBuffer(u32* data, u32 count, Renderer& renderer)
+	IndexBuffer::IndexBuffer(u32 count, u32* data, Renderer& renderer)
 	: m_Count(count),
 	m_Buffer(
 		count * sizeof(u32),
@@ -65,4 +65,16 @@ namespace Na {
 		frame.cmd_buffer.drawIndexed(m_Count, 1, 0, 0, 0);
 	}
 	*/
+
+	IndexBuffer::IndexBuffer(IndexBuffer&& other)
+	: m_Buffer(std::move(other.m_Buffer)),
+	m_Count(std::exchange(other.m_Count, 0))
+	{}
+
+	IndexBuffer& IndexBuffer::operator=(IndexBuffer&& other)
+	{
+		m_Buffer = std::move(other.m_Buffer);
+		m_Count = std::exchange(other.m_Count, 0);
+		return *this;
+	}
 } // namespace Na

@@ -67,4 +67,19 @@ namespace Na {
 		EndSingleTimeCommands(cmd_buffer, cmd_pool);
 	}
 
+	DeviceBuffer::DeviceBuffer(DeviceBuffer&& other)
+	: buffer(std::exchange(other.buffer, nullptr)),
+	size(std::exchange(other.size, 0)),
+	memory(std::exchange(other.memory, nullptr))
+	{}
+
+	DeviceBuffer& DeviceBuffer::operator=(DeviceBuffer&& other)
+	{
+		this->destroy();
+		this->buffer = std::exchange(other.buffer, nullptr);
+		this->size = std::exchange(other.size, 0);
+		this->memory = std::exchange(other.memory, nullptr);
+		return *this;
+	}
+
 } // namespace Na

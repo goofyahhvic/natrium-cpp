@@ -1,5 +1,5 @@
-#if !defined(NEO_LINKED_LIST_HPP)
-#define NEO_LINKED_LIST_HPP
+#if !defined(NA_LINKED_LIST_HPP)
+#define NA_LINKED_LIST_HPP
 
 #include "./ListNode.hpp"
 #include "./DoubleListIterator.hpp"
@@ -291,4 +291,4 @@ namespace Na {
 	};
 } // namespace Neo
 
-#endif // NEO_LINKED_LIST_HPP
+#endif // NA_LINKED_LIST_HPP

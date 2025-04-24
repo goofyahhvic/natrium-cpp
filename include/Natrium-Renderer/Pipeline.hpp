@@ -58,6 +58,7 @@ namespace Na {
 
 	class Pipeline {
 	public:
+		Pipeline(void) = default;
 		Pipeline(
 			Renderer& renderer,
 			const PipelineShaderInfos& handles = {},
@@ -66,6 +67,13 @@ namespace Na {
 			const PushConstantLayout& push_constant_layout = {}
 		);
 		void destroy(void);
+		inline ~Pipeline(void) { this->destroy(); }
+
+		Pipeline(const Pipeline& other) = delete;
+		Pipeline& operator=(const Pipeline& other) = delete;
+
+		Pipeline(Pipeline&& other);
+		Pipeline& operator=(Pipeline&& other);
 
 		[[nodiscard]] inline u64 handle(void) const { return m_Handle; }
 		[[nodiscard]] inline operator bool(void) const { return m_Handle != NA_INVALID_HANDLE; }

@@ -6,8 +6,15 @@
 namespace Na {
 	class IndexBuffer {
 	public:
-		IndexBuffer(u32* data, u32 count, Renderer& renderer);
+		IndexBuffer(void) = default;
+		IndexBuffer(u32 count, u32* data, Renderer& renderer);
 		void destroy(void);
+
+		IndexBuffer(const IndexBuffer& other) = delete;
+		IndexBuffer& operator=(const IndexBuffer& other) = delete;
+
+		IndexBuffer(IndexBuffer&& other);
+		IndexBuffer& operator=(IndexBuffer&& other);
 
 		void set_data(u32* data, Renderer& renderer);
 
@@ -16,10 +23,10 @@ namespace Na {
 		[[nodiscard]] inline u64 size(void) const { return m_Buffer.size; }
 		[[nodiscard]] inline u32 count(void) const { return m_Count; }
 
-		[[nodiscard]] inline operator bool(void) const { return m_Buffer; }
+		[[nodiscard]] inline operator bool(void) const { return m_Count; }
 	private:
 		DeviceBuffer m_Buffer;
-		u32 m_Count;
+		u32 m_Count = 0;
 	};
 } // namespace Na
 

@@ -14,8 +14,15 @@ namespace Na {
 
 	class WindowImpl_GLFW {
 	public:
+		WindowImpl_GLFW(void) = default;
 		WindowImpl_GLFW(u32 width, u32 height, const std::string_view& title);
 		void destroy(void);
+
+		WindowImpl_GLFW(const WindowImpl_GLFW& other) = delete;
+		WindowImpl_GLFW& operator=(const WindowImpl_GLFW& other) = delete;
+
+		WindowImpl_GLFW(WindowImpl_GLFW&& other);
+		WindowImpl_GLFW& operator=(WindowImpl_GLFW&& other);
 
 		void focus(void);
 		[[nodiscard]] inline bool focused(void) const { return m_Focus; }
@@ -34,8 +41,11 @@ namespace Na {
 	private:
 		friend void Window_SetGLFWCallbacks(GLFWwindow* window);
 	private:
-		GLFWwindow* m_Window;
-		u32 m_Width, m_Height;
+		GLFWwindow* m_Window = nullptr;
+		union {
+			struct { u32 m_Width, m_Height; };
+			glm::uvec2 m_Size = { 0, 0 };
+		};
 		bool m_Focus = true;
 		bool m_Minimized = false;
 	};

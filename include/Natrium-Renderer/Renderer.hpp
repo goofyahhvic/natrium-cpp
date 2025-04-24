@@ -33,8 +33,16 @@ namespace Na {
 
 	class Renderer {
 	public:
+		Renderer(void) = default;
 		Renderer(Window& window);
 		void destroy(void);
+		inline ~Renderer(void) { this->destroy(); }
+
+		Renderer(const Renderer& other) = delete;
+		Renderer& operator=(const Renderer& other) = delete;
+
+		Renderer(Renderer&& other);
+		Renderer& operator=(Renderer&& other);
 
 		Frame& clear(const glm::vec4& color = Colors::k_Black);
 		void present(void);
@@ -46,6 +54,7 @@ namespace Na {
 
 		[[nodiscard]] inline Frame& current_frame(void) { return m_Frames[m_CurrentFrame]; }
 		[[nodiscard]] inline const Frame& current_frame(void) const { return m_Frames[m_CurrentFrame]; }
+		[[nodiscard]] inline u32 current_frame_index(void) const { return m_CurrentFrame; }
 
 		inline void bind_pipeline(u64 pipeline_handle) { m_PipelineHandle = pipeline_handle; }
 		[[nodiscard]] inline u64 pipeline_handle(void) const { return m_PipelineHandle; }
@@ -56,7 +65,7 @@ namespace Na {
 		inline void set_viewport(const glm::vec4& viewport);
 		[[nodiscard]] inline glm::vec4 viewport(void) const { return { m_Viewport.x, m_Viewport.y, m_Viewport.width, m_Viewport.height }; }
 
-		[[nodiscard]] inline u32 current_frame_index(void) const { return m_CurrentFrame; }
+		[[nodiscard]] inline operator bool(void) const { return m_Window; }
 	private:
 		void _create_window_surface(void);
 		void _create_swapchain(void);
@@ -71,12 +80,12 @@ namespace Na {
 	private:
 		friend class Pipeline;
 
-		Window* m_Window;
+		Window* m_Window = nullptr;
 		vk::SurfaceKHR m_Surface;
 
 		union {
 			struct { u32 m_Width, m_Height; };
-			glm::uvec2 m_Size;
+			glm::uvec2 m_Size = { 0, 0 };
 			vk::Extent2D m_Extent;
 		};
 
@@ -102,11 +111,11 @@ namespace Na {
 
 		ArrayVector<Frame> m_Frames;
 		u32 m_CurrentFrame = 0;
-		u32 m_ImageIndex;
+		u32 m_ImageIndex = 0;
 
-		u64 m_PipelineHandle;
+		u64 m_PipelineHandle = NA_INVALID_HANDLE;
 
-		RendererConfig m_Config;
+		RendererConfig m_Config{};
 	};
 
 	vk::CommandBuffer BeginSingleTimeCommands(vk::CommandPool cmd_pool);
