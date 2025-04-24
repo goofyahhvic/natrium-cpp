@@ -39,19 +39,21 @@ namespace Na {
 		};
 	}
 
-	Renderer::Renderer(Window& window)
-	: m_Window(&window)
+	RendererConfig::RendererConfig(void)
 	{
-		m_Config = RendererConfig{
-			.max_frames_in_flight = 2,
-			.anisotropy_enabled = true,
-			.max_anisotropy = VkContext::GetPhysicalDevice().getProperties().limits.maxSamplerAnisotropy
-		};
+		max_anisotropy = VkContext::GetPhysicalDevice().getProperties().limits.maxSamplerAnisotropy;
+	}
+
+	Renderer::Renderer(Window& window, const RendererConfig& config)
+	: m_Window(&window),
+	m_Config(config)
+	{
 		m_Frames.resize(m_Config.max_frames_in_flight);
 
 		_create_window_surface();
 		_create_swapchain();
 		_create_image_views();
+		_create_color_buffer();
 		_create_depth_buffer();
 		_create_render_pass();
 		_create_framebuffers();
@@ -83,6 +85,9 @@ namespace Na {
 
 		m_DepthImage.destroy();
 		logical_device.destroyImageView(m_DepthImageView);
+
+		m_ColorImage.destroy();
+		logical_device.destroyImageView(m_ColorImageView);
 
 		for (auto& img_view : m_ImageViews)
 			logical_device.destroyImageView(img_view);
@@ -338,6 +343,21 @@ namespace Na {
 			);
 	}
 
+	void Renderer::_create_color_buffer(void)
+	{
+		m_ColorImage = DeviceImage(
+			{ m_Width, m_Height, 1 },
+			vk::ImageAspectFlagBits::eColor,
+			m_SwapchainFormat.format,
+			vk::ImageTiling::eOptimal,
+			vk::ImageUsageFlagBits::eTransientAttachment | vk::ImageUsageFlagBits::eColorAttachment,
+			vk::SharingMode::eExclusive,
+			VkContext::GetMSAASamples(m_Config.msaa_enabled),
+			vk::MemoryPropertyFlagBits::eDeviceLocal
+		);
+		m_ColorImageView = CreateImageView(m_ColorImage.img, vk::ImageAspectFlagBits::eColor, m_SwapchainFormat.format);
+	}
+
 	void Renderer::_create_depth_buffer(void)
 	{
 		vk::Format depth_format = FindSupportedFormat(
@@ -353,7 +373,7 @@ namespace Na {
 			vk::ImageTiling::eOptimal,
 			vk::ImageUsageFlagBits::eDepthStencilAttachment,
 			vk::SharingMode::eExclusive,
-			vk::SampleCountFlagBits::e1,
+			VkContext::GetMSAASamples(m_Config.msaa_enabled),
 			vk::MemoryPropertyFlagBits::eDeviceLocal
 		);
 		m_DepthImageView = CreateImageView(m_DepthImage.img, vk::ImageAspectFlagBits::eDepth, depth_format);
@@ -361,7 +381,7 @@ namespace Na {
 
 	void Renderer::_create_render_pass(void)
 	{
-		std::array<vk::AttachmentDescription, 2> attachments{};
+		std::array<vk::AttachmentDescription, 3> attachments{};
 		attachments.fill({});
 
 		vk::Format depth_format = FindSupportedFormat(
@@ -372,27 +392,29 @@ namespace Na {
 
 		vk::AttachmentDescription& color_attachment = attachments[0];
 		vk::AttachmentDescription& depth_attachment = attachments[1];
+		vk::AttachmentDescription& color_attachment_resolve = attachments[2];
 
 		vk::AttachmentReference color_attachment_ref;
 		vk::AttachmentReference depth_attachment_ref;
+		vk::AttachmentReference color_attachment_resolve_ref;
 
 		vk::SubpassDescription subpass;
 		vk::SubpassDependency dependency;
 
 		color_attachment.format         = m_SwapchainFormat.format;
-		color_attachment.samples        = vk::SampleCountFlagBits::e1;
+		color_attachment.samples        = VkContext::GetMSAASamples(m_Config.msaa_enabled);
 		color_attachment.loadOp         = vk::AttachmentLoadOp::eClear;
 		color_attachment.storeOp        = vk::AttachmentStoreOp::eStore;
 		color_attachment.stencilLoadOp  = vk::AttachmentLoadOp::eDontCare;
 		color_attachment.stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
 		color_attachment.initialLayout  = vk::ImageLayout::eUndefined;
-		color_attachment.finalLayout    = vk::ImageLayout::ePresentSrcKHR;
+		color_attachment.finalLayout    = vk::ImageLayout::eColorAttachmentOptimal;
 
 		color_attachment_ref.attachment = 0;
 		color_attachment_ref.layout     = vk::ImageLayout::eColorAttachmentOptimal;
 
 		depth_attachment.format         = depth_format;
-		depth_attachment.samples        = vk::SampleCountFlagBits::e1;
+		depth_attachment.samples        = VkContext::GetMSAASamples(m_Config.msaa_enabled);
 		depth_attachment.loadOp         = vk::AttachmentLoadOp::eClear;
 		depth_attachment.storeOp        = vk::AttachmentStoreOp::eDontCare;
 		depth_attachment.stencilLoadOp  = vk::AttachmentLoadOp::eDontCare;
@@ -403,12 +425,24 @@ namespace Na {
 		depth_attachment_ref.attachment = 1;
 		depth_attachment_ref.layout     = vk::ImageLayout::eDepthStencilAttachmentOptimal;
 
+		color_attachment_resolve.format         = m_SwapchainFormat.format;
+		color_attachment_resolve.samples        = vk::SampleCountFlagBits::e1;
+		color_attachment_resolve.loadOp         = vk::AttachmentLoadOp::eDontCare;
+		color_attachment_resolve.storeOp        = vk::AttachmentStoreOp::eStore;
+		color_attachment_resolve.stencilLoadOp  = vk::AttachmentLoadOp::eDontCare;
+		color_attachment_resolve.stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
+		color_attachment_resolve.initialLayout  = vk::ImageLayout::eUndefined;
+		color_attachment_resolve.finalLayout    = vk::ImageLayout::ePresentSrcKHR;
+			
+		color_attachment_resolve_ref.attachment = 2;
+		color_attachment_resolve_ref.layout = vk::ImageLayout::eColorAttachmentOptimal;;
+
 		subpass.pipelineBindPoint       = vk::PipelineBindPoint::eGraphics;
 
 		subpass.colorAttachmentCount    = 1;
 		subpass.pColorAttachments       = &color_attachment_ref;
-
 		subpass.pDepthStencilAttachment = &depth_attachment_ref;
+		subpass.pResolveAttachments     = &color_attachment_resolve_ref;
 
 		dependency.srcSubpass           = VK_SUBPASS_EXTERNAL;
 		dependency.dstSubpass           = 0;
@@ -416,7 +450,8 @@ namespace Na {
 		dependency.srcStageMask         = vk::PipelineStageFlagBits::eColorAttachmentOutput
 			                            | vk::PipelineStageFlagBits::eLateFragmentTests;
 
-		dependency.srcAccessMask        = vk::AccessFlagBits::eDepthStencilAttachmentWrite;
+		dependency.srcAccessMask        = vk::AccessFlagBits::eColorAttachmentWrite
+			                            | vk::AccessFlagBits::eDepthStencilAttachmentWrite;
 
 		dependency.dstStageMask         = vk::PipelineStageFlagBits::eColorAttachmentOutput
 			                            | vk::PipelineStageFlagBits::eEarlyFragmentTests;
@@ -443,9 +478,10 @@ namespace Na {
 		m_Framebuffers.resize(m_ImageViews.size());
 		for (u64 i = 0; i < m_ImageViews.size(); i++)
 		{
-			std::array<vk::ImageView, 2> attachments = {
+			std::array<vk::ImageView, 3> attachments = {
+				m_ColorImageView,
+				m_DepthImageView,
 				m_ImageViews[i],
-				m_DepthImageView
 			};
 
 			vk::FramebufferCreateInfo create_info;
@@ -533,6 +569,7 @@ namespace Na {
 
 		_create_swapchain();
 		_create_image_views();
+		_create_color_buffer();
 		_create_depth_buffer();
 		_create_framebuffers();
 	}

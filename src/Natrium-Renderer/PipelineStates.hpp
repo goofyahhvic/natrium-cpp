@@ -51,7 +51,7 @@ namespace Na {
 	{
 		vk::PipelineMultisampleStateCreateInfo multisample_info;
 		multisample_info.sampleShadingEnable = VK_FALSE;
-		multisample_info.rasterizationSamples = vk::SampleCountFlagBits::e1;
+		multisample_info.rasterizationSamples = VkContext::GetMSAASamples(enabled);
 		multisample_info.minSampleShading = 1.0f;
 		multisample_info.pSampleMask = nullptr;
 		multisample_info.alphaToCoverageEnable = VK_FALSE;

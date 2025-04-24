@@ -14,9 +14,14 @@ namespace Na {
 	};
 
 	struct RendererConfig {
-		u32 max_frames_in_flight;
-		bool anisotropy_enabled;
+		u32 max_frames_in_flight = 2;
+
+		bool anisotropy_enabled = true;
 		float max_anisotropy;
+
+		bool msaa_enabled = true;
+
+		RendererConfig(void);
 	};
 
 	struct Frame {
@@ -34,7 +39,7 @@ namespace Na {
 	class Renderer {
 	public:
 		Renderer(void) = default;
-		Renderer(Window& window);
+		Renderer(Window& window, const RendererConfig& config = RendererConfig());
 		void destroy(void);
 		inline ~Renderer(void) { this->destroy(); }
 
@@ -70,6 +75,7 @@ namespace Na {
 		void _create_window_surface(void);
 		void _create_swapchain(void);
 		void _create_image_views(void);
+		void _create_color_buffer(void);
 		void _create_depth_buffer(void);
 		void _create_render_pass(void);
 		void _create_framebuffers(void);
@@ -99,6 +105,9 @@ namespace Na {
 
 		Na::ArrayVector<vk::Image> m_Images;
 		Na::ArrayVector<vk::ImageView> m_ImageViews;
+
+		DeviceImage m_ColorImage;
+		vk::ImageView m_ColorImageView;
 
 		DeviceImage m_DepthImage;
 		vk::ImageView m_DepthImageView;

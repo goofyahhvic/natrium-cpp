@@ -254,6 +254,21 @@ namespace Na {
 		return chosen_device;
 	}
 
+	static vk::SampleCountFlagBits getMaxSampleCount(vk::PhysicalDevice physical_device)
+	{
+		vk::PhysicalDeviceProperties properties = physical_device.getProperties();
+		vk::SampleCountFlags counts = properties.limits.framebufferColorSampleCounts & properties.limits.framebufferDepthSampleCounts;
+
+		if (counts & vk::SampleCountFlagBits::e64) return vk::SampleCountFlagBits::e64;
+		if (counts & vk::SampleCountFlagBits::e32) return vk::SampleCountFlagBits::e32;
+		if (counts & vk::SampleCountFlagBits::e16) return vk::SampleCountFlagBits::e16;
+		if (counts & vk::SampleCountFlagBits::e8)  return vk::SampleCountFlagBits::e8;
+		if (counts & vk::SampleCountFlagBits::e4)  return vk::SampleCountFlagBits::e4;
+		if (counts & vk::SampleCountFlagBits::e2)  return vk::SampleCountFlagBits::e2;
+
+		return vk::SampleCountFlagBits::e1;
+	}
+
 	static const float priorities[] = { 1.0f };
 	static vk::DeviceQueueCreateInfo createQueueCreateInfo(u32 index, u32 count = 1, const float* _priorities = priorities)
 	{
@@ -302,6 +317,7 @@ namespace Na {
 		vk::SurfaceKHR temp_surface = createWindowSurface(temp_window);
 
 		context.m_PhysicalDevice = pickPhysicalDevice(context.m_Instance, temp_surface);
+		context.m_MSAASamples = getMaxSampleCount(context.m_PhysicalDevice);
 		context.m_LogicalDevice = createLogicalDevice(context.m_PhysicalDevice, temp_surface, context.m_GraphicsQueue);
 
 		vkDestroySurfaceKHR(context.m_Instance, temp_surface, nullptr);
