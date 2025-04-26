@@ -292,6 +292,7 @@ namespace Na {
 
 		vk::PhysicalDeviceFeatures device_features{};
 		device_features.samplerAnisotropy = VK_TRUE;
+		device_features.sampleRateShading = VK_TRUE;
 		create_info.pEnabledFeatures = &device_features;
 
 		create_info.enabledExtensionCount = (u32)requiredDeviceExtensions.size();

@@ -8,18 +8,20 @@ namespace Na {
 	using PipelineShaderInfos = std::initializer_list<vk::PipelineShaderStageCreateInfo>;
 
 	enum class ShaderAttributeType : u8 {
-		None = 0,
-		Vec2, Vec3, Vec4,
-		Mat4x4
+		None  = vk::Format::eUndefined,
+		Float = vk::Format::eR32Sfloat,
+		Vec2  = vk::Format::eR32G32Sfloat,
+		Vec3  = vk::Format::eR32G32B32Sfloat,
+		Vec4  = vk::Format::eR32G32B32A32Sfloat
 	};
 	inline u32 SizeOf(ShaderAttributeType type)
 	{
 		switch (type)
 		{
+		case ShaderAttributeType::Float:  return sizeof(float);
 		case ShaderAttributeType::Vec2:   return sizeof(float) * 2;
 		case ShaderAttributeType::Vec3:   return sizeof(float) * 3;
 		case ShaderAttributeType::Vec4:   return sizeof(float) * 4;
-		case ShaderAttributeType::Mat4x4: return sizeof(float) * 4 * 4;
 		}
 		return 0;
 	}
@@ -29,12 +31,23 @@ namespace Na {
 		ShaderAttributeType type;
 	};
 
-	using ShaderAttributeBinding = std::initializer_list<ShaderAttribute>;
+	enum class AttributeInputRate : u8 {
+		Vertex = vk::VertexInputRate::eVertex,
+		Instance = vk::VertexInputRate::eInstance
+	};
+
+	struct ShaderAttributeBinding {
+		u8 binding;
+		AttributeInputRate input_rate;
+		std::initializer_list<ShaderAttribute> attributes;
+	};
+
 	using ShaderAttributeLayout = std::initializer_list<ShaderAttributeBinding>;
 
 	enum class ShaderUniformType : u8 {
 		None = 0,
-		UniformBuffer, TextureSampler
+		UniformBuffer = vk::DescriptorType::eUniformBuffer,
+		Texture = vk::DescriptorType::eCombinedImageSampler
 	};
 
 	struct ShaderUniform {

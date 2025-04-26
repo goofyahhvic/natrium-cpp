@@ -24,6 +24,7 @@ namespace Na {
 		[[nodiscard]] inline u32 count(void) const { return m_Count; }
 
 		[[nodiscard]] inline operator bool(void) const { return m_Count; }
+		[[nodiscard]] inline operator vk::Buffer(void) const { return m_Buffer.buffer; }
 	private:
 		DeviceBuffer m_Buffer;
 		u32 m_Count = 0;

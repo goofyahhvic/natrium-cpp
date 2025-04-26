@@ -43,28 +43,10 @@ namespace Na {
 	{
 		Frame& frame = renderer.current_frame();
 
-		vk::DeviceSize offsets[] = { 0 };
-
-		frame.cmd_buffer.bindVertexBuffers(0, 1, &vertex_buffer.buffer().buffer, offsets);
+		frame.cmd_buffer.bindVertexBuffers(0, { vertex_buffer.buffer().buffer }, { 0 });
 		frame.cmd_buffer.bindIndexBuffer(m_Buffer.buffer, 0, vk::IndexType::eUint32);
 		frame.cmd_buffer.drawIndexed(m_Count, 1, 0, 0, 0);
 	}
-
-	/*
-	void IndexBuffer::draw(const std::initializer_list<VertexBuffer>& vertex_buffers, Renderer& renderer) const
-	{
-		Frame& frame = renderer.current_frame();
-
-		Na::ArrayVector<vk::Buffer> buffers(vertex_buffers.size());
-		for (u64 i = 0; const VertexBuffer& buffer : vertex_buffers)
-			buffers[i++] = buffer.buffer().buffer;
-		vk::DeviceSize offsets[] = { 0, 24 * 12 };
-
-		frame.cmd_buffer.bindVertexBuffers(0, 2, buffers.ptr(), offsets);
-		frame.cmd_buffer.bindIndexBuffer(m_Buffer.buffer, 0, vk::IndexType::eUint32);
-		frame.cmd_buffer.drawIndexed(m_Count, 1, 0, 0, 0);
-	}
-	*/
 
 	IndexBuffer::IndexBuffer(IndexBuffer&& other)
 	: m_Buffer(std::move(other.m_Buffer)),

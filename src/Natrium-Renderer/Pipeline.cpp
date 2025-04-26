@@ -6,27 +6,6 @@
 #include "./PipelineStates.hpp"
 
 namespace Na {
-	static vk::Format shaderAttributeTypeToVk(ShaderAttributeType type)
-	{
-		switch (type)
-		{
-		case ShaderAttributeType::Vec2: return vk::Format::eR32G32Sfloat;
-		case ShaderAttributeType::Vec3: return vk::Format::eR32G32B32Sfloat;
-		case ShaderAttributeType::Vec4: return vk::Format::eR32G32B32A32Sfloat;
-		}
-		return vk::Format::eUndefined;
-	}
-
-	static vk::DescriptorType shaderUniformTypeToVk(ShaderUniformType type)
-	{
-		switch (type)
-		{
-		case ShaderUniformType::UniformBuffer:  return vk::DescriptorType::eUniformBuffer;
-		case ShaderUniformType::TextureSampler: return vk::DescriptorType::eCombinedImageSampler;
-		}
-		return {};
-	}
-
 	static std::tuple<
 		Na::ArrayVector<vk::VertexInputBindingDescription>,
 		Na::ArrayVector<vk::VertexInputAttributeDescription>
@@ -42,18 +21,18 @@ namespace Na {
 
 		u64 attribute_count = 0;
 		for (const auto& binding : vertex_buffer_layout)
-			attribute_count += binding.size();
+			attribute_count += binding.attributes.size();
 
 		Na::ArrayVector<vk::VertexInputAttributeDescription> attribute_descriptions(attribute_count);
 
 		for (u32 i = 0; const auto& binding : vertex_buffer_layout)
 		{
 			u32 offset = 0;
-			for (u64 j = 0; const auto& attribute : binding)
+			for (u64 j = 0; const auto& attribute : binding.attributes)
 			{
-				attribute_descriptions[i + j * binding_descriptions.size()].binding = i;
+				attribute_descriptions[i + j * binding_descriptions.size()].binding = binding.binding;
 				attribute_descriptions[i + j * binding_descriptions.size()].location = attribute.location;
-				attribute_descriptions[i + j * binding_descriptions.size()].format = shaderAttributeTypeToVk(attribute.type);
+				attribute_descriptions[i + j * binding_descriptions.size()].format = (vk::Format)attribute.type;
 				attribute_descriptions[i + j * binding_descriptions.size()].offset = offset;
 
 				offset += SizeOf(attribute.type);
@@ -62,7 +41,7 @@ namespace Na {
 
 			binding_descriptions[i].binding = i;
 			binding_descriptions[i].stride = offset;
-			binding_descriptions[i].inputRate = vk::VertexInputRate::eVertex;
+			binding_descriptions[i].inputRate = (vk::VertexInputRate)binding.input_rate;
 
 			i++;
 		}
@@ -76,7 +55,7 @@ namespace Na {
 		for (size_t i = 0; const auto & binding : descriptor_layout)
 		{
 			bindings[i].binding            = binding.binding;
-			bindings[i].descriptorType     = shaderUniformTypeToVk(binding.type);
+			bindings[i].descriptorType     = (vk::DescriptorType)binding.type;
 			bindings[i].stageFlags         = (vk::ShaderStageFlagBits)binding.shader_stage;
 			bindings[i].descriptorCount    = 1;
 			bindings[i].pImmutableSamplers = nullptr;
@@ -97,7 +76,7 @@ namespace Na {
 		for (size_t i = 0; const ShaderUniform& uniform : descriptor_layout)
 		{
 			pool_sizes[i].descriptorCount = max_frames_in_flight;
-			pool_sizes[i].type = shaderUniformTypeToVk(uniform.type);
+			pool_sizes[i].type = (vk::DescriptorType)uniform.type;
 			i++;
 		}
 
