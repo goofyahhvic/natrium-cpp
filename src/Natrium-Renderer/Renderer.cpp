@@ -278,9 +278,9 @@ namespace Na {
 		m_Height = m_Window->height();
 
 		m_Viewport.x = 0.0f;
-		m_Viewport.y = 0.0f;
+		m_Viewport.y = (float)m_Height;
 		m_Viewport.width = (float)m_Width;
-		m_Viewport.height = (float)m_Height;
+		m_Viewport.height = -(float)m_Height;
 		m_Viewport.minDepth = 0.0f;
 		m_Viewport.maxDepth = 1.0f;
 
@@ -548,8 +548,9 @@ namespace Na {
 		m_Width = m_Window->width();
 		m_Height = m_Window->height();
 
+		m_Viewport.y = (float)m_Height;
 		m_Viewport.width = (float)m_Width;
-		m_Viewport.height = (float)m_Height;
+		m_Viewport.height = -(float)m_Height;
 		m_Scissor.extent.width = m_Width;
 		m_Scissor.extent.height = m_Height;
 

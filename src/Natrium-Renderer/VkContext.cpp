@@ -52,7 +52,8 @@ namespace Na {
 		"VK_LAYER_KHRONOS_validation"
 	};
 	static Na::ArrayList<const char*> requiredDeviceExtensions = {
-		VK_KHR_SWAPCHAIN_EXTENSION_NAME
+		VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+		VK_KHR_MAINTENANCE1_EXTENSION_NAME
 		//VK_EXT_DEPTH_RANGE_UNRESTRICTED_EXTENSION_NAME
 	};
 
