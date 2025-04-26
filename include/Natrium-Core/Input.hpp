@@ -12,7 +12,7 @@ namespace Na {
 		Input(void) { this->reset(); }
 		~Input(void) = default;
 
-		inline void on_event(const Event& e);
+		void on_event(const Event& e);
 		inline void reset(void) { memset(this, 0, sizeof(Input)); }
 
 		[[nodiscard]] inline bool  key(u16 index) const { return m_Keys[index]; }

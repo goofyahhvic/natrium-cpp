@@ -1,8 +1,10 @@
 #include "Pch.hpp"
 #include "Natrium-Core/Input.hpp"
 
+#include "Natrium-Core/Logger.hpp"
+
 namespace Na {
-	inline void Input::on_event(const Event& e)
+	void Input::on_event(const Event& e)
 	{
 		switch (e.type)
 		{
