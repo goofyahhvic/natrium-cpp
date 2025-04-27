@@ -10,6 +10,7 @@ namespace Na {
 		UniformBuffer(void) = default;
 		UniformBuffer(u64 size, u32 binding, Renderer& renderer);
 		void destroy(void);
+		inline ~UniformBuffer(void) { this->destroy(); }
 
 		UniformBuffer(const UniformBuffer& other) = delete;
 		UniformBuffer& operator=(const UniformBuffer& other) = delete;

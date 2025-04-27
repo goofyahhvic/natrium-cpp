@@ -22,8 +22,8 @@ namespace Na {
 				vk::BufferUsageFlagBits::eUniformBuffer,
 				vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent
 			);
-			m_Buffers[i] = buffer.buffer;
-			m_Memories[i] = buffer.memory;
+			m_Buffers[i]  = std::exchange(buffer.buffer, nullptr);
+			m_Memories[i] = std::exchange(buffer.memory, nullptr);
 
 			m_Mapped[i] = logical_device.mapMemory(m_Memories[i], 0, size);
 
