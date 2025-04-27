@@ -8,9 +8,12 @@
 #include "./Input.hpp"
 #include "./App.hpp"
 
-#include "Natrium-Renderer/Image.hpp"
+#include "./Asset.hpp"
+#include "./AssetRegistry.hpp"
+
 #include "Natrium-Renderer/Renderer.hpp"
-#include "Natrium-Renderer/Shader.hpp"
+#include "Natrium-Renderer/Assets/ImageAsset.hpp"
+#include "Natrium-Renderer/Assets/ShaderAsset.hpp"
 #include "Natrium-Renderer/Pipeline.hpp"
 #include "Natrium-Renderer/Buffers/VertexBuffer.hpp"
 #include "Natrium-Renderer/Buffers/IndexBuffer.hpp"

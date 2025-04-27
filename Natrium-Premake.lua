@@ -39,6 +39,7 @@ project "Natrium-Core"
     }
 
     links {
+        "%{Libraries.stb}",
         "%{Libraries.fmt}",
         "%{Libraries.glfw}",
     }

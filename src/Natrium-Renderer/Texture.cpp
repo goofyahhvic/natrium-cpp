@@ -44,17 +44,17 @@ namespace Na {
 		vk::Device logical_device = VkContext::GetLogicalDevice();
 
 		DeviceBuffer buffer(
-			img.size,
+			img.size(),
 			vk::BufferUsageFlagBits::eTransferSrc,
 			vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent
 		);
 
-		void* data = logical_device.mapMemory(buffer.memory, 0, img.size);
-		memcpy(data, (void*)img.data, img.size);
+		void* data = logical_device.mapMemory(buffer.memory, 0, img.size());
+		memcpy(data, img.data(), img.size());
 		logical_device.unmapMemory(buffer.memory);
 
 		m_Image = DeviceImage(
-			{ (u32)img.width, (u32)img.height, 1, }, // extent
+			{ (u32)img.width(), (u32)img.height(), 1,}, // extent
 			vk::ImageAspectFlagBits::eColor,
 			vk::Format::eR8G8B8A8Srgb,
 			vk::ImageTiling::eOptimal,

@@ -2,7 +2,7 @@
 #define NA_PIPELINE_HPP
 
 #include "./Renderer.hpp"
-#include "./Shader.hpp"
+#include "./Assets/ShaderAsset.hpp"
 
 namespace Na {
 	using PipelineShaderInfos = std::initializer_list<vk::PipelineShaderStageCreateInfo>;

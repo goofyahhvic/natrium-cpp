@@ -1,7 +1,7 @@
 #if !defined(NA_TEXTURE_HPP)
 #define NA_TEXTURE_HPP
 
-#include "./Image.hpp"
+#include "./Assets/ImageAsset.hpp"
 #include "./DeviceImage.hpp"
 #include "./Renderer.hpp"
 

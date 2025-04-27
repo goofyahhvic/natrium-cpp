@@ -4,7 +4,7 @@
 #include "Natrium-Core/Window.hpp"
 #include "./DeviceImage.hpp"
 #include "./Colors.hpp"
-#include "./Shader.hpp"
+#include "./ShaderModule.hpp"
 
 namespace Na {
 	struct PushConstant {
