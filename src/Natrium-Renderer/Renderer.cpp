@@ -560,8 +560,10 @@ namespace Na {
 			logical_device.destroyFramebuffer(framebuffer);
 
 		m_DepthImage.destroy();
-		if (m_DepthImageView)
-			logical_device.destroyImageView(m_DepthImageView);
+		logical_device.destroyImageView(m_DepthImageView);
+
+		m_ColorImage.destroy();
+		logical_device.destroyImageView(m_ColorImageView);
 
 		for (auto& img_view : m_ImageViews)
 			logical_device.destroyImageView(img_view);
@@ -639,6 +641,9 @@ namespace Na {
 	m_DepthImage(std::move(other.m_DepthImage)),
 	m_DepthImageView(std::exchange(other.m_DepthImageView, nullptr)),
 
+	m_ColorImage(std::move(other.m_ColorImage)),
+	m_ColorImageView(std::exchange(other.m_ColorImageView, nullptr)),
+
 	m_RenderPass(std::exchange(other.m_RenderPass, nullptr)),
 
 	m_Framebuffers(std::move(other.m_Framebuffers)),
@@ -679,6 +684,9 @@ namespace Na {
 
 		m_DepthImage = std::move(other.m_DepthImage);
 		m_DepthImageView = std::exchange(other.m_DepthImageView, nullptr);
+
+		m_ColorImage = std::move(other.m_ColorImage);
+		m_ColorImageView = std::exchange(other.m_ColorImageView, nullptr);
 
 		m_RenderPass = std::exchange(other.m_RenderPass, nullptr);
 
