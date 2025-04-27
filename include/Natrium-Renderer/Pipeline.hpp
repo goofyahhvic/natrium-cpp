@@ -45,9 +45,14 @@ namespace Na {
 	using ShaderAttributeLayout = std::initializer_list<ShaderAttributeBinding>;
 
 	enum class ShaderUniformType : u8 {
-		None = 0,
+		None          = 0,
+
 		UniformBuffer = vk::DescriptorType::eUniformBuffer,
-		Texture = vk::DescriptorType::eCombinedImageSampler
+		StorageBuffer = vk::DescriptorType::eStorageBuffer,
+		Texture       = vk::DescriptorType::eCombinedImageSampler,
+
+		UBO           = UniformBuffer,
+		SSBO          = StorageBuffer
 	};
 
 	struct ShaderUniform {

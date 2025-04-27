@@ -18,6 +18,7 @@
 #include "Natrium-Renderer/Buffers/VertexBuffer.hpp"
 #include "Natrium-Renderer/Buffers/IndexBuffer.hpp"
 #include "Natrium-Renderer/Buffers/UniformBuffer.hpp"
+#include "Natrium-Renderer/Buffers/StorageBuffer.hpp"
 #include "Natrium-Renderer/Texture.hpp"
 
 #endif // NATRIUM_INCLUDE_ALL
