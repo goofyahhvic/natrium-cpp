@@ -19,6 +19,13 @@ namespace Na {
 		inline ~DoubleList(void) { this->clear(); }
 		inline void clear(void) { while (this->pop_back()); }
 
+		template<typename t_Iterator>
+		inline DoubleList(const t_Iterator& begin, const t_Iterator& end)
+		{
+			for (t_Iterator it = begin; it != end; it++)
+				this->emplace_back(*it);
+		}
+
 		DoubleList(const T* buffer, u64 size)
 		: m_Head(nullptr), m_Tail(nullptr), m_Size(0)
 		{

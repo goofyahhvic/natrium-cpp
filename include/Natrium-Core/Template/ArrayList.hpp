@@ -21,6 +21,16 @@ namespace Na {
 		: m_Capacity(capacity), m_Size(size), m_Buffer(tmalloc<T>(capacity))
 		{}
 
+		template<typename t_Iterator>
+		inline ArrayList(const t_Iterator& begin, const t_Iterator& end)
+		: m_Capacity(std::distance(begin, end)), m_Size(m_Capacity), m_Buffer(tmalloc<T>(m_Size))
+		{
+			u64 i = 0;
+			for (t_Iterator it = begin; it != end; it++)
+				new (m_Buffer + i++) T(*it);
+		}
+
+
 		inline ArrayList(const T* buffer, u64 size)
 		: m_Capacity(size), m_Size(0), m_Buffer(tmalloc<T>(size))
 		{

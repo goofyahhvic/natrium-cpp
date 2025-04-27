@@ -24,6 +24,15 @@ namespace Na {
 				new (m_Buffer + m_Size) T();
 		}
 
+		template<typename t_Iterator>
+		inline ArrayVector(const t_Iterator& begin, const t_Iterator& end)
+		: m_Size(std::distance(begin, end)), m_Buffer(tmalloc<T>(m_Size))
+		{
+			u64 i = 0;
+			for (t_Iterator it = begin; it != end; it++)
+				new (m_Buffer + i++) T(*it);
+		}
+
 		inline ArrayVector(const T* buffer, u64 size)
 		: m_Size(0), m_Buffer(tmalloc<T>(size))
 		{
