@@ -18,11 +18,8 @@ namespace Na {
 		{}
 
 		inline ArrayVector(u64 size)
-		: m_Size(0), m_Buffer(tmalloc<T>(size))
-		{
-			for (; m_Size < size; m_Size++)
-				new (m_Buffer + m_Size) T();
-		}
+		: m_Size(size), m_Buffer(tcalloc<T>(size))
+		{}
 
 		template<typename t_Iterator>
 		inline ArrayVector(const t_Iterator& begin, const t_Iterator& end)
