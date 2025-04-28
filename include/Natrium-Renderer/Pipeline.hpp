@@ -8,11 +8,11 @@ namespace Na {
 	using PipelineShaderInfos = std::initializer_list<vk::PipelineShaderStageCreateInfo>;
 
 	enum class ShaderAttributeType : u8 {
-		None  = vk::Format::eUndefined,
-		Float = vk::Format::eR32Sfloat,
-		Vec2  = vk::Format::eR32G32Sfloat,
-		Vec3  = vk::Format::eR32G32B32Sfloat,
-		Vec4  = vk::Format::eR32G32B32A32Sfloat
+		None  = (u8)vk::Format::eUndefined,
+		Float = (u8)vk::Format::eR32Sfloat,
+		Vec2  = (u8)vk::Format::eR32G32Sfloat,
+		Vec3  = (u8)vk::Format::eR32G32B32Sfloat,
+		Vec4  = (u8)vk::Format::eR32G32B32A32Sfloat
 	};
 	inline u32 SizeOf(ShaderAttributeType type)
 	{
@@ -32,8 +32,8 @@ namespace Na {
 	};
 
 	enum class AttributeInputRate : u8 {
-		Vertex = vk::VertexInputRate::eVertex,
-		Instance = vk::VertexInputRate::eInstance
+		Vertex   = (u8)vk::VertexInputRate::eVertex,
+		Instance = (u8)vk::VertexInputRate::eInstance
 	};
 
 	struct ShaderAttributeBinding {
@@ -47,9 +47,9 @@ namespace Na {
 	enum class ShaderUniformType : u8 {
 		None          = 0,
 
-		UniformBuffer = vk::DescriptorType::eUniformBuffer,
-		StorageBuffer = vk::DescriptorType::eStorageBuffer,
-		Texture       = vk::DescriptorType::eCombinedImageSampler,
+		UniformBuffer = (u8)vk::DescriptorType::eUniformBuffer,
+		StorageBuffer = (u8)vk::DescriptorType::eStorageBuffer,
+		Texture       = (u8)vk::DescriptorType::eCombinedImageSampler,
 
 		UBO           = UniformBuffer,
 		SSBO          = StorageBuffer
