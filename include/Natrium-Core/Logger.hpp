@@ -84,7 +84,11 @@ namespace Na {
 				"{}[{:%Y-%m-%d %H:%M:%S}][{}]{}\n",
 				LogLevelStr(level),
 				std::chrono::round<std::chrono::seconds>(std::chrono::system_clock::now()),
+			#if __cpp_lib_chrono >= 201907L
 				std::chrono::current_zone()->name(),
+			#else
+				""
+			#endif
 				NA_COLOR_RSET
 			);
 		}
