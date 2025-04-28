@@ -23,9 +23,12 @@ namespace Na {
 		[[nodiscard]] inline u64 size(void) const { return m_Size; }
 		[[nodiscard]] inline operator bool(void) const { return m_Size; }
 	private:
-		Na::ArrayVector<vk::Buffer> m_Buffers;
-		Na::ArrayVector<vk::DeviceMemory> m_Memories;
-		Na::ArrayVector<void*> m_Mapped;
+		struct BufferData {
+			vk::Buffer buffer;
+			vk::DeviceMemory memory;
+			void* mapped;
+		};
+		Na::ArrayVector<BufferData> m_BufferDatas;
 
 		u64 m_Size = 0;
 	};
