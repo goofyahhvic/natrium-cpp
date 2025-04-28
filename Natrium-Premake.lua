@@ -8,6 +8,7 @@ LibraryDirectories["vk"] = "%{VulkanSdk}/Lib/"
 
 include "dependencies/fmt-Premake.lua"
 include "dependencies/stb-Premake.lua"
+include "dependencies/tinyobjloader-Premake.lua"
 include "dependencies/GLFW-Premake.lua"
 IncludeDirectories["glm"] = "dependencies/glm/"
 
@@ -41,6 +42,7 @@ project "Natrium-Core"
     links {
         "%{Libraries.stb}",
         "%{Libraries.fmt}",
+        "%{Libraries.tiny_obj_loader}",
         "%{Libraries.glfw}",
     }
 
@@ -107,6 +109,7 @@ project "Natrium-Renderer"
     includedirs {
         "%{IncludeDirectories.stb}",
         "%{IncludeDirectories.fmt}",
+        "%{IncludeDirectories.tiny_obj_loader}",
         "%{IncludeDirectories.glm}",
         "%{IncludeDirectories.glfw}",
         "include/",
@@ -115,6 +118,7 @@ project "Natrium-Renderer"
 
     links {
         "%{Libraries.stb}",
+        "%{Libraries.tiny_obj_loader}",
         "%{Libraries.glfw}",
         "%{Libraries.fmt}"
     }
