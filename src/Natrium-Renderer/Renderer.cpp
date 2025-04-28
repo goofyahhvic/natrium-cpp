@@ -68,7 +68,7 @@ namespace Na {
 
 		vk::Device logical_device = VkContext::GetLogicalDevice();
 
-		for (Frame& frame : m_Frames)
+		for (FrameData& frame : m_Frames)
 		{
 			logical_device.destroyFence(frame.in_flight_fence);
 			logical_device.destroySemaphore(frame.render_finished_semaphore);
@@ -99,25 +99,25 @@ namespace Na {
 		m_Window = nullptr;
 	}
 
-	Frame& Renderer::clear(const glm::vec4& color)
+	FrameData& Renderer::begin_frame(const glm::vec4& color)
 	{
 		vk::Device logical_device = VkContext::GetLogicalDevice();
-		Frame& frame = m_Frames[m_CurrentFrame];
+		FrameData& fd = m_Frames[m_CurrentFrame];
 
-		frame.skipped = false;
+		fd.skipped = false;
 
 		if (m_Width != m_Window->width() ||
 			m_Height != m_Window->height())
 		{
 			_recreate_swapchain();
-			frame.skipped = true;
-			return frame;
+			fd.skipped = true;
+			return fd;
 		}
 
 		vk::Result result = vk::Result::eSuccess;
 		
 		result = logical_device.waitForFences(
-			1, &frame.in_flight_fence,
+			1, &fd.in_flight_fence,
 			VK_TRUE, // wait all
 			UINT64_MAX // timeout
 		);
@@ -127,7 +127,7 @@ namespace Na {
 			result = logical_device.acquireNextImageKHR(
 				m_Swapchain,
 				UINT64_MAX, // timeout
-				frame.image_available_semaphore,
+				fd.image_available_semaphore,
 				nullptr,
 				&m_ImageIndex
 			);
@@ -135,8 +135,8 @@ namespace Na {
 			if (result == vk::Result::eErrorOutOfDateKHR)
 			{
 				_recreate_swapchain();
-				frame.skipped = true;
-				return frame;
+				fd.skipped = true;
+				return fd;
 			} else
 			if (result != vk::Result::eSuccess && result != vk::Result::eSuboptimalKHR)
 				throw std::runtime_error(NA_FORMAT("Result {}: Failed to acquire swapchain image!", (int)result));
@@ -144,16 +144,16 @@ namespace Na {
 		{
 			(void)err;
 			_recreate_swapchain();
-			frame.skipped = true;
-			return frame;
+			fd.skipped = true;
+			return fd;
 		}
 
-		result = logical_device.resetFences(1, &frame.in_flight_fence);
+		result = logical_device.resetFences(1, &fd.in_flight_fence);
 		NA_CHECK_VK(result, "Failed to acquire reset in flight fence!");
-		frame.cmd_buffer.reset();
+		fd.cmd_buffer.reset();
 
 		vk::CommandBufferBeginInfo begin_info;
-		frame.cmd_buffer.begin(begin_info);
+		fd.cmd_buffer.begin(begin_info);
 
 		std::array<vk::ClearValue, 2> clear_values;
 		clear_values[0].color = vk::ClearColorValue{ color.r, color.g, color.g, color.a };
@@ -170,14 +170,14 @@ namespace Na {
 		render_pass_info.clearValueCount = (u32)clear_values.size();
 		render_pass_info.pClearValues = clear_values.data();
 
-		frame.cmd_buffer.beginRenderPass(render_pass_info, vk::SubpassContents::eInline);
+		fd.cmd_buffer.beginRenderPass(render_pass_info, vk::SubpassContents::eInline);
 		if (m_PipelineHandle != NA_INVALID_HANDLE)
 		{
 			PipelineData& pipeline = VkContext::GetPipelinePool()[m_PipelineHandle];
-			frame.cmd_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline.pipeline);
+			fd.cmd_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline.pipeline);
 
 			if (!pipeline.descriptor_sets.empty())
-				frame.cmd_buffer.bindDescriptorSets(
+				fd.cmd_buffer.bindDescriptorSets(
 					vk::PipelineBindPoint::eGraphics,
 					pipeline.layout,
 					0, // first set
@@ -186,39 +186,39 @@ namespace Na {
 				);
 		}
 
-		frame.cmd_buffer.setViewport(0, 1, &m_Viewport);
-		frame.cmd_buffer.setScissor(0, 1, &m_Scissor);
+		fd.cmd_buffer.setViewport(0, 1, &m_Viewport);
+		fd.cmd_buffer.setScissor(0, 1, &m_Scissor);
 
-		return frame;
+		return fd;
 	}
 
-	void Renderer::present(void)
+	void Renderer::end_frame(void)
 	{
 		vk::Device logical_device = VkContext::GetLogicalDevice();
-		Frame& frame = m_Frames[m_CurrentFrame];
+		FrameData& fd = m_Frames[m_CurrentFrame];
 
 		vk::Result result = vk::Result::eSuccess;
 
-		frame.cmd_buffer.endRenderPass();
-		frame.cmd_buffer.end();
+		fd.cmd_buffer.endRenderPass();
+		fd.cmd_buffer.end();
 
 		vk::SubmitInfo submit_info;
 
-		vk::Semaphore wait_semaphores[] = { frame.image_available_semaphore };
+		vk::Semaphore wait_semaphores[] = { fd.image_available_semaphore };
 		vk::PipelineStageFlags wait_stages[] = { vk::PipelineStageFlagBits::eColorAttachmentOutput };
 
 		submit_info.waitSemaphoreCount = sizeof(wait_semaphores) / sizeof(vk::Semaphore);
 		submit_info.pWaitSemaphores = wait_semaphores;
 		submit_info.pWaitDstStageMask = wait_stages;
 
-		vk::Semaphore signal_semaphores[] = { frame.render_finished_semaphore };
+		vk::Semaphore signal_semaphores[] = { fd.render_finished_semaphore };
 		submit_info.signalSemaphoreCount = sizeof(signal_semaphores) / sizeof(VkSemaphore);
 		submit_info.pSignalSemaphores = signal_semaphores;
 
 		submit_info.commandBufferCount = 1;
-		submit_info.pCommandBuffers = &frame.cmd_buffer;
+		submit_info.pCommandBuffers = &fd.cmd_buffer;
 
-		result = VkContext::GetGraphicsQueue().submit(1, &submit_info, frame.in_flight_fence);
+		result = VkContext::GetGraphicsQueue().submit(1, &submit_info, fd.in_flight_fence);
 		NA_CHECK_VK(result, "Failed to submit draw calls to graphics queue!");
 
 		vk::PresentInfoKHR present_info;
@@ -255,10 +255,10 @@ namespace Na {
 
 	void Renderer::set_push_constant(PushConstant push_constant, void* data)
 	{
-		Frame& frame = m_Frames[m_CurrentFrame];
+		FrameData& fd = m_Frames[m_CurrentFrame];
 		PipelineData& pipeline = VkContext::GetPipelinePool()[m_PipelineHandle];
 
-		frame.cmd_buffer.pushConstants(
+		fd.cmd_buffer.pushConstants(
 			pipeline.layout,
 			(vk::ShaderStageFlagBits)push_constant.shader_stage,
 			push_constant.offset,

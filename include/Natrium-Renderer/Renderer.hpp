@@ -24,7 +24,7 @@ namespace Na {
 		RendererConfig(void);
 	};
 
-	struct Frame {
+	struct FrameData {
 		bool              skipped = false;
 
 		vk::CommandBuffer cmd_buffer;
@@ -49,16 +49,16 @@ namespace Na {
 		Renderer(Renderer&& other);
 		Renderer& operator=(Renderer&& other);
 
-		Frame& clear(const glm::vec4& color = Colors::k_Black);
-		void present(void);
+		FrameData& begin_frame(const glm::vec4& color = Colors::k_Black);
+		void end_frame(void);
 
 		void set_push_constant(PushConstant push_constant, void* data);
 
 		[[nodiscard]] inline RendererConfig config(void) const { return m_Config; }
 		[[nodiscard]] inline vk::CommandPool single_time_cmd_pool(void) const { return m_SingleTimeCmdPool; }
 
-		[[nodiscard]] inline Frame& current_frame(void) { return m_Frames[m_CurrentFrame]; }
-		[[nodiscard]] inline const Frame& current_frame(void) const { return m_Frames[m_CurrentFrame]; }
+		[[nodiscard]] inline FrameData& current_frame(void) { return m_Frames[m_CurrentFrame]; }
+		[[nodiscard]] inline const FrameData& current_frame(void) const { return m_Frames[m_CurrentFrame]; }
 		[[nodiscard]] inline u32 current_frame_index(void) const { return m_CurrentFrame; }
 
 		inline void bind_pipeline(u64 pipeline_handle) { m_PipelineHandle = pipeline_handle; }
@@ -118,7 +118,7 @@ namespace Na {
 		vk::CommandPool m_GraphicsCmdPool;
 		vk::CommandPool m_SingleTimeCmdPool;
 
-		ArrayVector<Frame> m_Frames;
+		ArrayVector<FrameData> m_Frames;
 		u32 m_CurrentFrame = 0;
 		u32 m_ImageIndex = 0;
 

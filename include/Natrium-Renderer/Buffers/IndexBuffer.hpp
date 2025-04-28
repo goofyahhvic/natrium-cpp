@@ -18,13 +18,14 @@ namespace Na {
 
 		void set_data(u32* data, Renderer& renderer);
 
-		void draw(const VertexBuffer& vertex_buffer, Renderer& renderer) const;
+		void draw(const VertexBuffer& vertex_buffer, u32 instance_count, Renderer& renderer) const;
+		inline void draw(const VertexBuffer& vertex_buffer, Renderer& renderer) const { this->draw(vertex_buffer, 1, renderer); }
 
 		[[nodiscard]] inline u64 size(void) const { return m_Buffer.size; }
 		[[nodiscard]] inline u32 count(void) const { return m_Count; }
 
 		[[nodiscard]] inline operator bool(void) const { return m_Count; }
-		[[nodiscard]] inline operator vk::Buffer(void) const { return m_Buffer.buffer; }
+		[[nodiscard]] inline vk::Buffer native(void) const { return m_Buffer.buffer; }
 	private:
 		DeviceBuffer m_Buffer;
 		u32 m_Count = 0;

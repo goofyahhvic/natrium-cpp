@@ -39,13 +39,13 @@ namespace Na {
 		stage_buffer.destroy();
 	}
 
-	void IndexBuffer::draw(const VertexBuffer& vertex_buffer, Renderer& renderer) const
+	void IndexBuffer::draw(const VertexBuffer& vertex_buffer, u32 instance_count, Renderer& renderer) const
 	{
-		Frame& frame = renderer.current_frame();
+		FrameData& fd = renderer.current_frame();
 
-		frame.cmd_buffer.bindVertexBuffers(0, { vertex_buffer.buffer().buffer }, { 0 });
-		frame.cmd_buffer.bindIndexBuffer(m_Buffer.buffer, 0, vk::IndexType::eUint32);
-		frame.cmd_buffer.drawIndexed(m_Count, 1, 0, 0, 0);
+		fd.cmd_buffer.bindVertexBuffers(0, { vertex_buffer.native() }, {0});
+		fd.cmd_buffer.bindIndexBuffer(m_Buffer.buffer, 0, vk::IndexType::eUint32);
+		fd.cmd_buffer.drawIndexed(m_Count, instance_count, 0, 0, 0);
 	}
 
 	IndexBuffer::IndexBuffer(IndexBuffer&& other)

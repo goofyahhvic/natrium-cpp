@@ -24,7 +24,7 @@ namespace Na {
 		[[nodiscard]] inline const DeviceBuffer& buffer(void) const { return m_Buffer; }
 
 		[[nodiscard]] inline operator bool(void) const { return m_Buffer; }
-		[[nodiscard]] inline operator vk::Buffer(void) const { return m_Buffer.buffer; }
+		[[nodiscard]] inline vk::Buffer native(void) const { return m_Buffer.buffer; }
 	private:
 		DeviceBuffer m_Buffer;
 	};
