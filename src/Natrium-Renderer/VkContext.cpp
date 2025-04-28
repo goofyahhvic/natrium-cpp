@@ -110,7 +110,7 @@ namespace Na {
 		QueueFamilyIndices indices;
 		for (u32 i = 0; const auto& property : properties)
 		{
-			if (property.queueFlags & vk::QueueFlagBits::eCompute)
+			if (property.queueFlags & vk::QueueFlagBits::eGraphics)
 				if (device.getSurfaceSupportKHR(i, surface))
 					indices.graphics = i;
 
