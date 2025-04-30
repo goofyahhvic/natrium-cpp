@@ -26,4 +26,7 @@
 
 #include "Natrium-Renderer/Texture.hpp"
 
+// entry point
+#include "Natrium-Core/Main.hpp"
+
 #endif // NATRIUM_INCLUDE_ALL

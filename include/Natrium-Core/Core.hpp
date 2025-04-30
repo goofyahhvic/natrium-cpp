@@ -27,11 +27,9 @@
         }
 #endif // NA_CONFIG
 
-#if defined(NA_PLATFORM_WINDOWS)
-
-#elif defined(NA_PLATFORM_LINUX)
-
-#endif // NA_PLATFORM
+#if defined(NA_PLATFORM_WINDOWS) && defined(NA_CONFIG_DIST)
+    #define NA_WINDOWED_APP
+#endif
 
 using i8  = int8_t;
 using i16 = int16_t;
@@ -77,6 +75,12 @@ namespace Na {
 #else
     constexpr Platform k_Platform = Platform::None;
 #endif // NA_PLATFORM
+
+#if defined(NA_PLATFORM_WINDOWS) && defined(NA_CONFIG_DIST)
+    constexpr bool k_WindowedApp = true;
+#else
+    constexpr bool k_WindowedApp = false;
+#endif
 
     [[nodiscard]] inline i32 Round32(float num) { return (i32)floor(num + 0.5f); }
     [[nodiscard]] inline i64 Round64(double num) { return (i64)floor(num + 0.5); }
