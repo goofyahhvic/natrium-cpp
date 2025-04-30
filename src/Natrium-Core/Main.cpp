@@ -1,6 +1,4 @@
 #include "Pch.hpp"
-
-#if !defined(NA_MAIN_HANDLED)
 #include "Natrium-Core/Main.hpp"
 #undef main
 
@@ -36,5 +34,3 @@ int APIENTRY WinMain(
 	return main(__argc, __argv);
 }
 #endif // NA_WINDOWED_APP
-
-#endif // NA_MAIN_HANDLED
