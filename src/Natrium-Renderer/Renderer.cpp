@@ -257,7 +257,11 @@ namespace Na {
 			);
 	}
 
-	void Renderer::set_push_constant(PushConstant push_constant, void* data, const GraphicsPipeline& pipeline)
+	void Renderer::set_push_constant(
+		PushConstant push_constant,
+		const void* data,
+		const GraphicsPipeline& pipeline
+	)
 	{
 		FrameData& fd = m_Frames[m_CurrentFrame];
 

@@ -56,7 +56,7 @@ namespace Na {
 
 		void bind_pipeline(const GraphicsPipeline& pipeline);
 
-		void set_push_constant(PushConstant push_constant, void* data, const GraphicsPipeline& pipeline);
+		void set_push_constant(PushConstant push_constant, const void* data, const GraphicsPipeline& pipeline);
 
 		[[nodiscard]] inline RendererConfig config(void) const { return m_Config; }
 		[[nodiscard]] inline vk::CommandPool single_time_cmd_pool(void) const { return m_SingleTimeCmdPool; }
