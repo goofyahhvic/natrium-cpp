@@ -8,7 +8,7 @@ namespace Na {
 	class VertexBuffer {
 	public:
 		VertexBuffer(void) = default;
-		VertexBuffer(u64 size, void* data, Renderer& renderer);
+		VertexBuffer(u64 size, const void* data, Renderer& renderer);
 		void destroy(void);
 		inline ~VertexBuffer(void) { this->destroy(); }
 
@@ -18,7 +18,7 @@ namespace Na {
 		VertexBuffer(VertexBuffer&& other);
 		VertexBuffer& operator=(VertexBuffer&& other);
 
-		void set_data(void* data, Renderer& renderer);
+		void set_data(const void* data, Renderer& renderer);
 
 		[[nodiscard]] inline u64 size(void) const { return m_Buffer.size; }
 		[[nodiscard]] inline const DeviceBuffer& buffer(void) const { return m_Buffer; }

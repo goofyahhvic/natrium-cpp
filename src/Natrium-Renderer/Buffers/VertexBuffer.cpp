@@ -6,7 +6,7 @@
 #include "Natrium-Core/Logger.hpp"
 
 namespace Na {
-	VertexBuffer::VertexBuffer(u64 size, void* data, Renderer& renderer)
+	VertexBuffer::VertexBuffer(u64 size, const void* data, Renderer& renderer)
 	: m_Buffer(
 		size,
 		vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer,
@@ -21,7 +21,7 @@ namespace Na {
 		m_Buffer.destroy();
 	}
 
-	void VertexBuffer::set_data(void* data, Renderer& renderer)
+	void VertexBuffer::set_data(const void* data, Renderer& renderer)
 	{
 		vk::Device logical_device = VkContext::GetLogicalDevice();
 

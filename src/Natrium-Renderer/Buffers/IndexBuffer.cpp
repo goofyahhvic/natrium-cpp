@@ -4,7 +4,7 @@
 #include "Natrium-Renderer/VkContext.hpp"
 
 namespace Na {
-	IndexBuffer::IndexBuffer(u32 count, u32* data, Renderer& renderer)
+	IndexBuffer::IndexBuffer(u32 count, const u32* data, Renderer& renderer)
 	: m_Count(count),
 	m_Buffer(
 		count * sizeof(u32),
@@ -20,7 +20,7 @@ namespace Na {
 		m_Buffer.destroy();
 	}
 
-	void IndexBuffer::set_data(u32* data, Renderer& renderer)
+	void IndexBuffer::set_data(const u32* data, Renderer& renderer)
 	{
 		vk::Device logical_device = VkContext::GetLogicalDevice();
 

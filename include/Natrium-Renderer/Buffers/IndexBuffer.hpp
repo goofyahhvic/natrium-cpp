@@ -7,7 +7,7 @@ namespace Na {
 	class IndexBuffer {
 	public:
 		IndexBuffer(void) = default;
-		IndexBuffer(u32 count, u32* data, Renderer& renderer);
+		IndexBuffer(u32 count, const u32* data, Renderer& renderer);
 		void destroy(void);
 
 		IndexBuffer(const IndexBuffer& other) = delete;
@@ -16,7 +16,7 @@ namespace Na {
 		IndexBuffer(IndexBuffer&& other);
 		IndexBuffer& operator=(IndexBuffer&& other);
 
-		void set_data(u32* data, Renderer& renderer);
+		void set_data(const u32* data, Renderer& renderer);
 
 		void draw(const VertexBuffer& vertex_buffer, u32 instance_count, Renderer& renderer) const;
 		inline void draw(const VertexBuffer& vertex_buffer, Renderer& renderer) const { this->draw(vertex_buffer, 1, renderer); }

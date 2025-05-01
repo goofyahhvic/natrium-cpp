@@ -19,7 +19,7 @@ namespace Na {
 		StorageBuffer& operator=(StorageBuffer&& other);
 
 		void bind_to_pipeline(u32 binding, GraphicsPipeline& pipeline) const;
-		void set_data(void* data, Renderer& renderer);
+		void set_data(const void* data, Renderer& renderer);
 
 		[[nodiscard]] inline u64 size(void) const { return m_Size; }
 		[[nodiscard]] inline operator bool(void) const { return m_Size; }

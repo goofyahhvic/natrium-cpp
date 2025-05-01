@@ -63,7 +63,7 @@ namespace Na {
 		}
 	}
 
-	void UniformBuffer::set_data(void* data, Renderer& renderer)
+	void UniformBuffer::set_data(const void* data, Renderer& renderer)
 	{
 		memcpy(m_BufferDatas[renderer.current_frame_index()].mapped, data, m_Size);
 	}
