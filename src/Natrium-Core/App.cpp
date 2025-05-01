@@ -2,6 +2,7 @@
 #include "Natrium-Core/App.hpp"
 
 #include "Natrium-Renderer/VkContext.hpp"
+#include "Natrium-Core/Window.hpp"
 
 namespace Na {
 	void App::run(void)

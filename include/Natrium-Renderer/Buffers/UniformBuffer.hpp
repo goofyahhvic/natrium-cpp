@@ -8,7 +8,7 @@ namespace Na {
 	class UniformBuffer {
 	public:
 		UniformBuffer(void) = default;
-		UniformBuffer(u64 size, u32 binding, Renderer& renderer);
+		UniformBuffer(u64 size, Renderer& renderer);
 		void destroy(void);
 		inline ~UniformBuffer(void) { this->destroy(); }
 
@@ -18,6 +18,7 @@ namespace Na {
 		UniformBuffer(UniformBuffer&& other);
 		UniformBuffer& operator=(UniformBuffer&& other);
 
+		void bind_to_pipeline(u32 binding, GraphicsPipeline& pipeline) const;
 		void set_data(void* data, Renderer& renderer);
 
 		[[nodiscard]] inline u64 size(void) const { return m_Size; }

@@ -9,7 +9,7 @@ namespace Na {
 	class Texture {
 	public:
 		Texture(void) = default;
-		Texture(const Image& img, u32 binding, Renderer& renderer);
+		Texture(const Image& img, Renderer& renderer);
 		void destroy(void);
 		inline ~Texture(void) { this->destroy(); }
 
@@ -18,6 +18,8 @@ namespace Na {
 
 		Texture(Texture&& other);
 		Texture& operator=(Texture&& other);
+
+		void bind_to_pipeline(u32 binding, GraphicsPipeline& pipeline) const;
 
 		[[nodiscard]] inline operator bool(void) const { return m_Image; }
 	private:

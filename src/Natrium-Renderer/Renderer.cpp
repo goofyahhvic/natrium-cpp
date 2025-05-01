@@ -4,6 +4,7 @@
 #include "Natrium-Core/Logger.hpp"
 
 #include "Natrium-Renderer/VkContext.hpp"
+#include "Natrium-Renderer/Pipeline.hpp"
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -171,20 +172,6 @@ namespace Na {
 		render_pass_info.pClearValues = clear_values.data();
 
 		fd.cmd_buffer.beginRenderPass(render_pass_info, vk::SubpassContents::eInline);
-		if (m_PipelineHandle != NA_INVALID_HANDLE)
-		{
-			PipelineData& pipeline = VkContext::GetPipelinePool()[m_PipelineHandle];
-			fd.cmd_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline.pipeline);
-
-			if (!pipeline.descriptor_sets.empty())
-				fd.cmd_buffer.bindDescriptorSets(
-					vk::PipelineBindPoint::eGraphics,
-					pipeline.layout,
-					0, // first set
-					1, &pipeline.descriptor_sets[m_CurrentFrame],
-					0, nullptr // dynamic offsets
-				);
-		}
 
 		fd.cmd_buffer.setViewport(0, 1, &m_Viewport);
 		fd.cmd_buffer.setScissor(0, 1, &m_Scissor);
@@ -253,13 +240,29 @@ namespace Na {
 		m_CurrentFrame = (m_CurrentFrame + 1) % m_Config.max_frames_in_flight;
 	}
 
-	void Renderer::set_push_constant(PushConstant push_constant, void* data)
+	void Renderer::bind_pipeline(const GraphicsPipeline& pipeline)
+	{
+		vk::Device logical_device = VkContext::GetLogicalDevice();
+		FrameData& fd = m_Frames[m_CurrentFrame];
+
+		fd.cmd_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline.pipeline());
+
+		if (!pipeline.descriptor_sets().empty())
+			fd.cmd_buffer.bindDescriptorSets(
+				vk::PipelineBindPoint::eGraphics,
+				pipeline.layout(),
+				0, // first set
+				1, &pipeline.descriptor_sets()[m_CurrentFrame],
+				0, nullptr // dynamic offsets
+			);
+	}
+
+	void Renderer::set_push_constant(PushConstant push_constant, void* data, const GraphicsPipeline& pipeline)
 	{
 		FrameData& fd = m_Frames[m_CurrentFrame];
-		PipelineData& pipeline = VkContext::GetPipelinePool()[m_PipelineHandle];
 
 		fd.cmd_buffer.pushConstants(
-			pipeline.layout,
+			pipeline.layout(),
 			(vk::ShaderStageFlagBits)push_constant.shader_stage,
 			push_constant.offset,
 			push_constant.size,
@@ -656,8 +659,6 @@ namespace Na {
 	m_CurrentFrame(other.m_CurrentFrame),
 	m_ImageIndex(other.m_ImageIndex),
 
-	m_PipelineHandle(other.m_PipelineHandle),
-
 	m_Config(std::move(other.m_Config))
 	{}
 
@@ -699,8 +700,6 @@ namespace Na {
 
 		m_CurrentFrame = other.m_CurrentFrame;
 		m_ImageIndex = other.m_ImageIndex;
-
-		m_PipelineHandle = other.m_PipelineHandle;
 
 		m_Config = std::move(other.m_Config);
 

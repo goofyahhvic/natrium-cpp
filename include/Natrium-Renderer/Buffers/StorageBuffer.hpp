@@ -8,7 +8,7 @@ namespace Na {
 	class StorageBuffer {
 	public:
 		StorageBuffer(void) = default;
-		StorageBuffer(u64 size, u32 binding, Renderer& renderer);
+		StorageBuffer(u64 size, Renderer& renderer);
 		void destroy(void);
 		inline ~StorageBuffer(void) { this->destroy(); }
 
@@ -18,6 +18,7 @@ namespace Na {
 		StorageBuffer(StorageBuffer&& other);
 		StorageBuffer& operator=(StorageBuffer&& other);
 
+		void bind_to_pipeline(u32 binding, GraphicsPipeline& pipeline) const;
 		void set_data(void* data, Renderer& renderer);
 
 		[[nodiscard]] inline u64 size(void) const { return m_Size; }

@@ -100,17 +100,14 @@ namespace Na {
 		return descriptor_sets;
 	}
 
-	Pipeline::Pipeline(
+	GraphicsPipeline::GraphicsPipeline(
 		Renderer& renderer,
 		const PipelineShaderInfos& shader_infos,
 		const ShaderAttributeLayout& vertex_buffer_layout,
 		const ShaderUniformLayout& uniform_data_layout,
 		const PushConstantLayout& push_constant_layout
 	)
-	: m_Handle(VkContext::GetPipelinePool().emplace())
 	{
-		PipelineData& pipeline = VkContext::GetPipelinePool()[m_Handle];
-
 		Na::ArrayVector<vk::DynamicState> dynamic_states = {
 			vk::DynamicState::eViewport,
 			vk::DynamicState::eScissor
@@ -134,7 +131,7 @@ namespace Na {
 		auto depth_stencil_info = depthStencilInfo();
 
 		if (uniform_data_layout.size())
-			pipeline.descriptor_set_layout = createDescriptorSetLayout(uniform_data_layout);
+			m_DescriptorLayout = createDescriptorSetLayout(uniform_data_layout);
 
 		Na::ArrayVector<vk::PushConstantRange> push_constant_ranges(push_constant_layout.size());
 
@@ -146,10 +143,10 @@ namespace Na {
 			i++;
 		}
 
-		pipeline.layout = VkContext::GetLogicalDevice().createPipelineLayout(
+		m_Layout = VkContext::GetLogicalDevice().createPipelineLayout(
 			vk::PipelineLayoutCreateInfo(
 				{}, // flags
-				(bool)pipeline.descriptor_set_layout, uniform_data_layout.size() ? &pipeline.descriptor_set_layout : nullptr,
+				(bool)m_DescriptorLayout, uniform_data_layout.size() ? &m_DescriptorLayout : nullptr,
 				(u32)push_constant_ranges.size(), push_constant_ranges.ptr()
 			)
 		);
@@ -160,7 +157,7 @@ namespace Na {
 		create_info.pStages = shader_infos.begin();
 
 		create_info.renderPass = renderer.m_RenderPass;
-		create_info.layout = pipeline.layout;
+		create_info.layout = m_Layout;
 
 		create_info.pDynamicState = &dynamic_state_info;
 		create_info.pViewportState = &viewport_info;
@@ -171,49 +168,57 @@ namespace Na {
 		create_info.pColorBlendState = &color_blend_info;
 		create_info.pDepthStencilState = &depth_stencil_info;
 
-		pipeline.pipeline = VkContext::GetLogicalDevice().createGraphicsPipeline(nullptr, create_info).value;
+		m_Pipeline = VkContext::GetLogicalDevice().createGraphicsPipeline(nullptr, create_info).value;
 
 		if (uniform_data_layout.size())
 		{
 			Na::ArrayVector<vk::DescriptorSetLayout> descriptor_layouts(renderer.m_Config.max_frames_in_flight);
 			for (vk::DescriptorSetLayout& descriptor_layout : descriptor_layouts)
-				descriptor_layout = pipeline.descriptor_set_layout;
+				descriptor_layout = m_DescriptorLayout;
 
-			pipeline.descriptor_pool = createDescriptorPool(uniform_data_layout, renderer.m_Config.max_frames_in_flight);
-			pipeline.descriptor_sets = createDescriptorSets(
+			m_DescriptorPool = createDescriptorPool(uniform_data_layout, renderer.m_Config.max_frames_in_flight);
+			m_DescriptorSets = createDescriptorSets(
 				renderer.m_Config.max_frames_in_flight,
 				descriptor_layouts.ptr(),
-				pipeline.descriptor_pool
+				m_DescriptorPool
 			);
 		}
 	}
 
-	void Pipeline::destroy(void)
+	void GraphicsPipeline::destroy(void)
 	{
-		if (m_Handle == NA_INVALID_HANDLE)
-			return;
-
 		vk::Device logical_device = VkContext::GetLogicalDevice();
-		PipelineData& pipeline = VkContext::GetPipelinePool()[m_Handle];
 
-		logical_device.destroyDescriptorPool(pipeline.descriptor_pool);
-		logical_device.destroyPipeline(pipeline.pipeline);
-		logical_device.destroyDescriptorSetLayout(pipeline.descriptor_set_layout);
-		logical_device.destroyPipelineLayout(pipeline.layout);
+		logical_device.destroyDescriptorPool(m_DescriptorPool);
+		logical_device.destroyPipeline(m_Pipeline);
+		logical_device.destroyDescriptorSetLayout(m_DescriptorLayout);
+		logical_device.destroyPipelineLayout(m_Layout);
 
-		pipeline.descriptor_sets.~ArrayVector();
-		memset(&pipeline, 0, sizeof(PipelineData));
-
-		m_Handle = NA_INVALID_HANDLE;
+		m_DescriptorSets.~ArrayVector();
 	}
 
-	Pipeline::Pipeline(Pipeline&& other)
-	: m_Handle(std::exchange(other.m_Handle, NA_INVALID_HANDLE))
+	GraphicsPipeline::GraphicsPipeline(GraphicsPipeline&& other)
+	: m_Pipeline(std::exchange(other.m_Pipeline, nullptr)),
+
+	m_DescriptorLayout(std::exchange(other.m_DescriptorLayout, nullptr)),
+	m_Layout(std::exchange(other.m_Layout, nullptr)),
+
+	m_DescriptorPool(std::exchange(other.m_DescriptorPool, nullptr)),
+	m_DescriptorSets(std::move(other.m_DescriptorSets))
 	{}
 
-	Pipeline& Pipeline::operator=(Pipeline&& other)
+	GraphicsPipeline& GraphicsPipeline::operator=(GraphicsPipeline&& other)
 	{
-		m_Handle = std::exchange(other.m_Handle, NA_INVALID_HANDLE);
+		this->destroy();
+
+		m_Pipeline = std::exchange(other.m_Pipeline, nullptr);
+
+		m_DescriptorLayout = std::exchange(other.m_DescriptorLayout, nullptr);
+		m_Layout = std::exchange(other.m_Layout, nullptr);
+
+		m_DescriptorPool = std::exchange(other.m_DescriptorPool, nullptr);
+		m_DescriptorSets = std::move(other.m_DescriptorSets);
+
 		return *this;
 	}
 } // namespace Na

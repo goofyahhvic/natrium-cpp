@@ -2,7 +2,6 @@
 #define NA_VK_CONTEXT_HPP
 
 #include "Natrium-Core/Core.hpp"
-#include "Pipeline.hpp"
 
 namespace Na {
     inline constexpr bool k_ValidationLayersEnabled = k_BuildConfig != BuildConfig::Distribution;
@@ -38,8 +37,6 @@ namespace Na {
 		[[nodiscard]] static inline vk::Queue                  GetGraphicsQueue(void)  { return s_Context->m_GraphicsQueue; }
 
 
-		[[nodiscard]] static inline ArrayList<PipelineData>&   GetPipelinePool(void)   { return s_Context->m_PipelinePool; }
-
 		[[nodiscard]] static inline vk::SampleCountFlagBits    GetMSAASamples(bool enabled = true) { return enabled ? s_Context->m_MSAASamples : vk::SampleCountFlagBits::e1; }
 
 	private:
@@ -51,8 +48,6 @@ namespace Na {
 		vk::Queue                  m_GraphicsQueue  = nullptr;
 
 		vk::SampleCountFlagBits    m_MSAASamples    = vk::SampleCountFlagBits::e1;
-
-		ArrayList<PipelineData>    m_PipelinePool;
 
 		static inline VkContext* s_Context = nullptr;
 	};

@@ -64,20 +64,10 @@ namespace Na {
 
 	using PushConstantLayout = std::initializer_list<PushConstant>;
 
-	struct PipelineData {
-		vk::Pipeline pipeline;
-
-		vk::DescriptorSetLayout descriptor_set_layout;
-		vk::PipelineLayout layout;
-
-		vk::DescriptorPool descriptor_pool;
-		Na::ArrayVector<vk::DescriptorSet> descriptor_sets;
-	};
-
-	class Pipeline {
+	class GraphicsPipeline {
 	public:
-		Pipeline(void) = default;
-		Pipeline(
+		GraphicsPipeline(void) = default;
+		GraphicsPipeline(
 			Renderer& renderer,
 			const PipelineShaderInfos& handles = {},
 			const ShaderAttributeLayout& vertex_buffer_layout = {},
@@ -85,18 +75,31 @@ namespace Na {
 			const PushConstantLayout& push_constant_layout = {}
 		);
 		void destroy(void);
-		inline ~Pipeline(void) { this->destroy(); }
+		inline ~GraphicsPipeline(void) { this->destroy(); }
 
-		Pipeline(const Pipeline& other) = delete;
-		Pipeline& operator=(const Pipeline& other) = delete;
+		GraphicsPipeline(const GraphicsPipeline& other) = delete;
+		GraphicsPipeline& operator=(const GraphicsPipeline& other) = delete;
 
-		Pipeline(Pipeline&& other);
-		Pipeline& operator=(Pipeline&& other);
+		GraphicsPipeline(GraphicsPipeline&& other);
+		GraphicsPipeline& operator=(GraphicsPipeline&& other);
 
-		[[nodiscard]] inline u64 handle(void) const { return m_Handle; }
-		[[nodiscard]] inline operator bool(void) const { return m_Handle != NA_INVALID_HANDLE; }
+		[[nodiscard]] inline vk::Pipeline pipeline(void) const { return m_Pipeline; }
+
+		[[nodiscard]] inline vk::DescriptorSetLayout descriptor_layout(void) const { return m_DescriptorLayout; }
+		[[nodiscard]] inline vk::PipelineLayout layout(void) const { return m_Layout; }
+
+		[[nodiscard]] inline vk::DescriptorPool descriptor_pool(void) const { return m_DescriptorPool; }
+		[[nodiscard]] inline const Na::ArrayVector<vk::DescriptorSet>& descriptor_sets(void) const { return m_DescriptorSets; }
+
+		[[nodiscard]] inline operator bool(void) const { return m_Pipeline; }
 	private:
-		u64 m_Handle = NA_INVALID_HANDLE;
+		vk::Pipeline m_Pipeline;
+
+		vk::DescriptorSetLayout m_DescriptorLayout;
+		vk::PipelineLayout m_Layout;
+
+		vk::DescriptorPool m_DescriptorPool;
+		Na::ArrayVector<vk::DescriptorSet> m_DescriptorSets;
 	};
 } // namespace Na
 

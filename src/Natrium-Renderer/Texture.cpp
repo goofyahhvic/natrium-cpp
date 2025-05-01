@@ -3,6 +3,8 @@
 
 #include "Natrium-Renderer/Buffers/DeviceBuffer.hpp"
 #include "Natrium-Renderer/VkContext.hpp"
+#include "Natrium-Renderer/Pipeline.hpp"
+#include "Internal.hpp"
 
 namespace Na {
 	static vk::Sampler createSampler(
@@ -39,7 +41,7 @@ namespace Na {
 		return VkContext::GetLogicalDevice().createSampler(create_info);
 	}
 
-	Texture::Texture(const Image& img, u32 binding, Renderer& renderer)
+	Texture::Texture(const Image& img, Renderer& renderer)
 	{
 		vk::Device logical_device = VkContext::GetLogicalDevice();
 
@@ -78,28 +80,6 @@ namespace Na {
 			renderer.config().anisotropy_enabled,
 			renderer.config().max_anisotropy
 		);
-
-		vk::DescriptorImageInfo descriptor_info;
-		descriptor_info.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-		descriptor_info.imageView = m_ImageView;
-		descriptor_info.sampler = m_Sampler;
-
-		for (size_t i = 0; i < renderer.config().max_frames_in_flight; i++)
-		{
-			vk::WriteDescriptorSet descriptor_write;
-
-			descriptor_write.dstSet = VkContext::GetPipelinePool()[renderer.pipeline_handle()].descriptor_sets[i];
-			descriptor_write.dstBinding = binding;
-			descriptor_write.dstArrayElement = 0;
-			descriptor_write.descriptorType = vk::DescriptorType::eCombinedImageSampler;
-			descriptor_write.descriptorCount = 1;
-			descriptor_write.pImageInfo = &descriptor_info;
-
-			logical_device.updateDescriptorSets(
-				1, &descriptor_write,
-				0, nullptr // descriptor copy
-			);
-		}
 	}
 
 	void Texture::destroy(void)
@@ -116,6 +96,25 @@ namespace Na {
 		m_ImageView = nullptr;
 
 		m_Image.destroy();
+	}
+
+	void Texture::bind_to_pipeline(u32 binding, GraphicsPipeline& pipeline) const
+	{
+		vk::DescriptorImageInfo descriptor_info;
+		descriptor_info.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+		descriptor_info.imageView = m_ImageView;
+		descriptor_info.sampler = m_Sampler;
+
+		for (vk::DescriptorSet descriptor_set : pipeline.descriptor_sets())
+			Internal::WriteToDescriptorSet(
+				descriptor_set,
+				binding,
+				vk::DescriptorType::eCombinedImageSampler,
+				1,
+				nullptr, // buffer info
+				&descriptor_info,
+				nullptr // texel buffer view
+			);
 	}
 
 	Texture::Texture(Texture&& other)

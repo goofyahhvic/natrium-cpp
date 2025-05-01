@@ -7,6 +7,8 @@
 #include "./ShaderModule.hpp"
 
 namespace Na {
+	class GraphicsPipeline;
+
 	struct PushConstant {
 		ShaderStageBits shader_stage;
 		u32 size;
@@ -52,7 +54,9 @@ namespace Na {
 		FrameData& begin_frame(const glm::vec4& color = Colors::k_Black);
 		void end_frame(void);
 
-		void set_push_constant(PushConstant push_constant, void* data);
+		void bind_pipeline(const GraphicsPipeline& pipeline);
+
+		void set_push_constant(PushConstant push_constant, void* data, const GraphicsPipeline& pipeline);
 
 		[[nodiscard]] inline RendererConfig config(void) const { return m_Config; }
 		[[nodiscard]] inline vk::CommandPool single_time_cmd_pool(void) const { return m_SingleTimeCmdPool; }
@@ -60,9 +64,6 @@ namespace Na {
 		[[nodiscard]] inline FrameData& current_frame(void) { return m_Frames[m_CurrentFrame]; }
 		[[nodiscard]] inline const FrameData& current_frame(void) const { return m_Frames[m_CurrentFrame]; }
 		[[nodiscard]] inline u32 current_frame_index(void) const { return m_CurrentFrame; }
-
-		inline void bind_pipeline(u64 pipeline_handle) { m_PipelineHandle = pipeline_handle; }
-		[[nodiscard]] inline u64 pipeline_handle(void) const { return m_PipelineHandle; }
 
 		[[nodiscard]] inline u32 width(void) const { return m_Width; }
 		[[nodiscard]] inline u32 height(void) const { return m_Height; }
@@ -84,7 +85,7 @@ namespace Na {
 
 		void _recreate_swapchain(void);
 	private:
-		friend class Pipeline;
+		friend class GraphicsPipeline;
 
 		Window* m_Window = nullptr;
 		vk::SurfaceKHR m_Surface;
@@ -121,8 +122,6 @@ namespace Na {
 		ArrayVector<FrameData> m_Frames;
 		u32 m_CurrentFrame = 0;
 		u32 m_ImageIndex = 0;
-
-		u64 m_PipelineHandle = NA_INVALID_HANDLE;
 
 		RendererConfig m_Config{};
 	};

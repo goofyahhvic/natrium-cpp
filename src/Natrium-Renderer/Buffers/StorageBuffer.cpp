@@ -2,9 +2,11 @@
 #include "Natrium-Renderer/Buffers/StorageBuffer.hpp"
 
 #include "Natrium-Renderer/VkContext.hpp"
+#include "Natrium-Renderer/Pipeline.hpp"
+#include "Internal.hpp"
 
 namespace Na {
-	StorageBuffer::StorageBuffer(u64 size, u32 binding, Renderer& renderer)
+	StorageBuffer::StorageBuffer(u64 size, Renderer& renderer)
 	: m_Size(size)
 	{
 		vk::Device logical_device = VkContext::GetLogicalDevice();
@@ -23,28 +25,6 @@ namespace Na {
 			m_BufferDatas[i].buffer = std::exchange(buffer.buffer, nullptr);
 			m_BufferDatas[i].memory = std::exchange(buffer.memory, nullptr);
 			m_BufferDatas[i].mapped = logical_device.mapMemory(m_BufferDatas[i].memory, 0, size);
-
-			vk::DescriptorBufferInfo buffer_info;
-			buffer_info.buffer = m_BufferDatas[i].buffer;
-			buffer_info.offset = 0;
-			buffer_info.range = (u32)size;
-
-			vk::WriteDescriptorSet descriptor_write;
-			descriptor_write.dstSet = VkContext::GetPipelinePool()[renderer.pipeline_handle()].descriptor_sets[i];
-			descriptor_write.dstBinding = binding;
-			descriptor_write.dstArrayElement = 0;
-
-			descriptor_write.descriptorType = vk::DescriptorType::eStorageBuffer;
-			descriptor_write.descriptorCount = 1;
-
-			descriptor_write.pBufferInfo = &buffer_info;
-			descriptor_write.pImageInfo = nullptr;
-			descriptor_write.pTexelBufferView = nullptr;
-
-			logical_device.updateDescriptorSets(
-				1, &descriptor_write,
-				0, nullptr // descriptor copy
-			);
 		}
 	}
 
@@ -63,6 +43,24 @@ namespace Na {
 
 		m_BufferDatas.clear();
 		m_Size = 0;
+	}
+
+	void StorageBuffer::bind_to_pipeline(u32 binding, GraphicsPipeline& pipeline) const
+	{
+		for (u64 i = 0; i < m_BufferDatas.size(); i++)
+		{
+			vk::DescriptorBufferInfo buffer_info(m_BufferDatas[i].buffer, 0, m_Size);
+
+			Internal::WriteToDescriptorSet(
+				pipeline.descriptor_sets()[i],
+				binding,
+				vk::DescriptorType::eStorageBuffer,
+				1, // count
+				&buffer_info,
+				nullptr, // image info
+				nullptr // texel buffer view
+			);
+		}
 	}
 
 	void StorageBuffer::set_data(void* data, Renderer& renderer)
