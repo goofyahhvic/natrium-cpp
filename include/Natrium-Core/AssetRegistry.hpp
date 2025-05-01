@@ -31,7 +31,7 @@ namespace Na {
 		ShaderModule create_shader_module_from_src(
 			const std::string_view& src_path,
 			ShaderStageBits stage,
-			const std::string_view& entry_point
+			const std::string_view& entry_point = "main"
 		) const;
 
 		[[nodiscard]] inline std::filesystem::path& asset_dir(void) { return m_AssetDir; }
