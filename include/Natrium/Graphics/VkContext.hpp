@@ -29,6 +29,8 @@ namespace Na {
 		static VkContext Initialize(void);
 		static void Shutdown(void);
 
+		static inline void WaitForRemainingDeviceTasks(void) { s_Context->m_LogicalDevice.waitIdle(); }
+
 		[[nodiscard]] static inline vk::Instance               GetInstance(void)       { return s_Context->m_Instance; }
 		[[nodiscard]] static inline vk::DebugUtilsMessengerEXT GetDebugMessenger(void) { return s_Context->m_DebugMessenger; }
 		[[nodiscard]] static inline vk::PhysicalDevice         GetPhysicalDevice(void) { return s_Context->m_PhysicalDevice; }
