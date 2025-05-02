@@ -25,17 +25,17 @@ namespace Na {
 		[[nodiscard]] inline bool gamepad_button(Joystick jid, GamepadButton button) const { return m_GamepadButtons.test(this->_GamepadButtonIndex(jid, button)); }
 		[[nodiscard]] inline float gamepad_axis(Joystick jid, GamepadAxis axis) const { return m_GamepadAxes[this->_GamepadAxisIndex(jid, axis)]; }
 	private:
-		[[nodiscard]] static constexpr inline u64 _GamepadButtonIndex(Joystick jid, GamepadButton button) { return (u64)jid + (u64)button * ((u64)GamepadButtons::k_Last + 1); }
-		[[nodiscard]] static constexpr inline u64 _GamepadAxisIndex(Joystick jid, GamepadAxis axis) { return (u64)jid + (u64)axis * ((u64)GamepadAxes::k_Last + 1); }
+		[[nodiscard]] static constexpr inline u64 _GamepadButtonIndex(Joystick jid, GamepadButton button) { return (u64)jid * u64(GamepadButtons::k_Last + 1) + (u64)button; }
+		[[nodiscard]] static constexpr inline u64 _GamepadAxisIndex(Joystick jid, GamepadAxis axis) { return (u64)jid * u64(GamepadAxes::k_Last + 1) + (u64)axis; }
 	private:
 		std::bitset<Keys::k_Last + 1> m_Keys;
 
 		std::bitset<MouseButtons::k_Last + 1> m_MouseButtons;
 		MousePos m_MousePos;
 
-		std::bitset<Joysticks::k_Last + 1> m_Gamepads;
-		std::bitset<(GamepadButtons::k_Last + 1) * Joysticks::k_Last> m_GamepadButtons;
-		std::array<float, (GamepadAxes::k_Last + 1) * Joysticks::k_Last> m_GamepadAxes;
+		std::bitset<(Joysticks::k_Last + 1)> m_Gamepads;
+		std::bitset<(GamepadButtons::k_Last + 1) * (Joysticks::k_Last + 1)> m_GamepadButtons;
+		std::array<float, (GamepadAxes::k_Last + 1) * (Joysticks::k_Last + 1)> m_GamepadAxes;
 	};
 } // namespace Na
 
