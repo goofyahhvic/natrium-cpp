@@ -21,7 +21,9 @@ namespace Na {
 		None = 0,
 		KeyPressed, KeyReleased,
 		WindowResized, WindowClosed, WindowFocused, WindowLostFocus, WindowMinimized, WindowRestored,
-		MouseMoved, MouseScrolled, MouseButtonPressed, MouseButtonReleased
+		MouseMoved, MouseScrolled, MouseButtonPressed, MouseButtonReleased,
+		GamepadConnected, GamepadDisconnected,
+		GamepadButtonPressed, GamepadButtonReleased, GamepadAxisMoved
 	};
 
 	struct Event_KeyPressed {
@@ -88,6 +90,39 @@ namespace Na {
 		u32 padding = 0;
 	};
 
+	struct Event_GamepadConnected {
+		NA_EVENT_BASE(GamepadConnected);
+		Joystick joystick_id;
+		u32 padding = 0;
+	};
+
+	struct Event_GamepadDisconnected {
+		NA_EVENT_BASE(GamepadDisconnected);
+		Joystick joystick_id;
+		u32 padding = 0;
+	};
+
+	struct Event_GamepadButtonPressed {
+		NA_EVENT_BASE(GamepadButtonPressed);
+		Joystick joystick_id;
+		GamepadButton button;
+		u32 padding = 0;
+	};
+
+	struct Event_GamepadButtonReleased {
+		NA_EVENT_BASE(GamepadButtonReleased);
+		Joystick joystick_id;
+		GamepadButton button;
+		u32 padding = 0;
+	};
+
+	struct Event_GamepadAxisMoved {
+		NA_EVENT_BASE(GamepadAxisMoved);
+		Joystick joystick_id;
+		GamepadAxis axis;
+		float value;
+	};
+
 	union Event {
 		struct {
 			EventType type;
@@ -113,6 +148,14 @@ namespace Na {
 
 		Event_MouseButtonPressed mouse_button_pressed;
 		Event_MouseButtonReleased mouse_button_released;
+
+		Event_GamepadConnected gamepad_connected;
+		Event_GamepadDisconnected gamepad_disconnected;
+
+		Event_GamepadButtonPressed gamepad_button_pressed;
+		Event_GamepadButtonReleased gamepad_button_released;
+
+		Event_GamepadAxisMoved gamepad_axis_moved;
 	};
 
 	using EventQueue = ArrayList<Event>;

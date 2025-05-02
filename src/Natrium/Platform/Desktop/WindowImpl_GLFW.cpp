@@ -9,10 +9,65 @@
 #include <GLFW/glfw3.h>
 
 namespace Na {
+	static std::unordered_map<Joystick, GLFWgamepadstate> previousGamepadStates;
+
 	EventQueue& PollEvents(void)
 	{
 		Context::GetEventQueue().resize(0);
 		glfwPollEvents();
+
+		for (Joystick jid = Joysticks::k_1; jid <= Joysticks::k_Last; jid++)
+		{
+			if (glfwJoystickPresent(jid) && glfwJoystickIsGamepad(jid))
+			{
+				GLFWgamepadstate current_state;
+				if (glfwGetGamepadState(jid, &current_state))
+				{
+					auto& previous_state = previousGamepadStates[jid];
+					
+					for (GamepadButton button = 0; button <= GamepadButtons::k_Last; button++)
+					{
+						if (current_state.buttons[button] == previous_state.buttons[button])
+							continue;
+
+						if (current_state.buttons[button] == InputActions::k_Press)
+							Context::GetEventQueue().emplace(Event{.gamepad_button_pressed = {
+								EventType::GamepadButtonPressed,
+								false,
+								nullptr,
+								jid,
+								button
+						    }});
+						else
+							Context::GetEventQueue().emplace(Event{.gamepad_button_released = {
+								EventType::GamepadButtonReleased,
+								false,
+								nullptr,
+								jid,
+								button
+							}});
+					}
+
+					for (GamepadAxis axis = 0; axis <= GamepadAxes::k_Last; ++axis)
+					{
+						if (current_state.axes[axis] == previous_state.axes[axis])
+							continue;
+
+						Context::GetEventQueue().emplace(Event{.gamepad_axis_moved = {
+							EventType::GamepadAxisMoved,
+							false,
+							nullptr,
+							jid,
+							axis,
+							current_state.axes[axis]
+						}});
+					}
+
+					previous_state = current_state;
+				}
+			}
+		}
+
 		return Context::GetEventQueue();
 	}
 
@@ -88,7 +143,7 @@ namespace Na {
 
 			switch (action)
 			{
-			case KeyActions::k_Press:
+			case InputActions::k_Press:
 				Context::GetEventQueue().emplace(Event{.key_pressed = {
 					EventType::KeyPressed,
 					false,
@@ -98,7 +153,7 @@ namespace Na {
 					false
 				}});
 				break;
-			case KeyActions::k_Repeat:
+			case InputActions::k_Repeat:
 				Context::GetEventQueue().emplace(Event{.key_pressed = {
 					EventType::KeyPressed,
 					false,
@@ -108,7 +163,7 @@ namespace Na {
 					true
 				}});
 				break;
-			case KeyActions::k_Release:
+			case InputActions::k_Release:
 				Context::GetEventQueue().emplace(Event{.key_released = {
 					EventType::KeyReleased,
 					false,
@@ -200,7 +255,7 @@ namespace Na {
 			Window* __window = (Window*)glfwGetWindowUserPointer(window);
 			switch (action)
 			{
-			case MouseButtonActions::k_Press:
+			case InputActions::k_Press:
 				Context::GetEventQueue().emplace(Event{.mouse_button_pressed = {
 					EventType::MouseButtonPressed,
 					false,
@@ -208,7 +263,7 @@ namespace Na {
 					(MouseButton)button
 				}});
 				break;
-			case MouseButtonActions::k_Release:
+			case InputActions::k_Release:
 				Context::GetEventQueue().emplace(Event{.mouse_button_released = {
 					EventType::MouseButtonReleased,
 					false,
@@ -216,6 +271,31 @@ namespace Na {
 					(MouseButton)button
 				}});
 				break;
+			}
+		});
+		glfwSetJoystickCallback([](int jid, int event)
+		{
+			if (!glfwJoystickIsGamepad(jid))
+				return;
+
+			if (event == GLFW_CONNECTED)
+			{
+				Context::GetEventQueue().emplace(Event{.gamepad_connected = {
+					EventType::GamepadConnected,
+					false,
+					nullptr,
+					(Joystick)jid
+				}});
+			} else
+			if (event == GLFW_DISCONNECTED)
+			{
+				Context::GetEventQueue().emplace(Event{.gamepad_disconnected = {
+					EventType::GamepadDisconnected,
+					false,
+					nullptr,
+					(Joystick)jid
+				}});
+				previousGamepadStates.erase(jid);
 			}
 		});
 	}

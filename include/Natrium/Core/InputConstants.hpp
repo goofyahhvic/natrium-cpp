@@ -4,13 +4,13 @@
 #include "Natrium/Core.hpp"
 
 namespace Na {
-	using KeyAction = i8;
-	namespace KeyActions {
-		constexpr KeyAction k_Unknown = -1;
-		constexpr KeyAction k_Release = 0;
-		constexpr KeyAction k_Press   = 1;
-		constexpr KeyAction k_Repeat  = 2;
-	} // namespace KeyActions
+	using Action = i8;
+	namespace InputActions {
+		constexpr Action k_Unknown = -1;
+		constexpr Action k_Release = 0;
+		constexpr Action k_Press   = 1;
+		constexpr Action k_Repeat  = 2;
+	} // namespace InputActions
 
 	using Key = i16;
 	namespace Keys {
@@ -154,13 +154,6 @@ namespace Na {
 		constexpr KeyMod k_CapsLock = NA_BIT(4);
 		constexpr KeyMod k_NumLock  = NA_BIT(5);
 	} // namespace KeyMods
-
-	using MouseButtonAction = i8;
-	namespace MouseButtonActions {
-		constexpr MouseButtonAction k_Unknown = -1;
-		constexpr MouseButtonAction k_Release = 0;
-		constexpr MouseButtonAction k_Press   = 1;
-	} // namespace MouseButtonActions
 
 	using MouseButton = i8;
 	namespace MouseButtons {
