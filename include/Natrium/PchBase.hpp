@@ -8,6 +8,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <time.h>
+#include <stddef.h>
 
 #include <iostream>
 #include <fstream>
@@ -20,6 +21,7 @@
 #include <chrono>
 #include <thread>
 #include <limits>
+#include <concepts>
 
 #include <initializer_list>
 #include <string>

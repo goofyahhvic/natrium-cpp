@@ -16,7 +16,7 @@ namespace Na {
 
 		inline void free_asset(const std::string_view& name) { m_Assets.erase(name); }
 
-		template<typename T>
+		template<LoadableAsset T>
 		inline AssetHandle<T> load_asset(const std::string_view& path)
 		{
 			auto it = m_Assets.find(path);
