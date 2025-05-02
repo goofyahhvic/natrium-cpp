@@ -7,7 +7,7 @@
 #include "./Core/Event.hpp"
 #include "./Core/Window.hpp"
 #include "./Core/Input.hpp"
-#include "./Core/App.hpp"
+#include "./Core/DeltaTime.hpp"
 
 #include "./Assets/Asset.hpp"
 #include "./Assets/AssetRegistry.hpp"
