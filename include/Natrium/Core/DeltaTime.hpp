@@ -12,6 +12,7 @@ namespace Na {
 			auto difference = std::chrono::duration_cast<std::chrono::microseconds>(m_Now - m_Last);
 			m_Last = m_Now;
 			m_DeltaTime = difference.count() / 1.0e+6;
+			return m_DeltaTime;
 		}
 		[[nodiscard]] inline double dt(void) const { return m_DeltaTime; }
 		[[nodiscard]] inline double get(void) const { return m_DeltaTime; }
