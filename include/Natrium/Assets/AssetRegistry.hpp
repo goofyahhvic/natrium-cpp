@@ -34,6 +34,13 @@ namespace Na {
 			const std::string_view& entry_point = "main"
 		) const;
 
+		ShaderModule create_shader_module_from_str(
+			const std::string_view& name,
+			const std::string_view& src,
+			ShaderStageBits stage,
+			const std::string_view& entry_point = "main"
+		) const;
+
 		[[nodiscard]] inline std::filesystem::path& asset_dir(void) { return m_AssetDir; }
 		[[nodiscard]] inline const std::filesystem::path& asset_dir(void) const { return m_AssetDir; }
 		inline void set_asset_dir(const std::filesystem::path& asset_dir) { m_AssetDir = asset_dir; }

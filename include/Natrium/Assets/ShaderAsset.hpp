@@ -14,6 +14,8 @@ namespace Na {
 
 	class ShaderString : public Asset {
 	public:
+		ShaderString(const std::string& data, const std::string& name) : m_Data(data), m_Name(name) {};
+		ShaderString(const std::string_view& data, const std::string_view& name) : m_Data(data), m_Name(name) {};
 		ShaderString(const std::filesystem::path& path);
 
 		static AssetHandle<ShaderString> Load(const std::filesystem::path& path) { return std::make_shared<ShaderString>(path);  }

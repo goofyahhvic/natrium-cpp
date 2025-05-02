@@ -51,4 +51,23 @@ namespace Na {
 		return ShaderModule(shader_binary, stage, entry_point);
 	}
 
+	ShaderModule AssetRegistry::create_shader_module_from_str(
+		const std::string_view& name,
+		const std::string_view& src,
+		ShaderStageBits stage,
+		const std::string_view& entry_point
+	) const
+	{
+		std::filesystem::path output_path = (m_ShaderOutputDir / name).replace_extension(".spv");
+
+		ShaderBinary shader_binary(ShaderString(src, name).compile());
+
+		std::ofstream output_file(output_path, std::ios::binary);
+		NA_ASSERT(output_file, "Failed to open file {}", output_path.C_STR());
+
+		output_file.write((const char*)shader_binary.ptr(), shader_binary.size());
+		output_file.close();
+
+		return ShaderModule(shader_binary, stage, entry_point);
+	}
 } // namespace Na
