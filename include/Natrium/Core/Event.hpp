@@ -3,11 +3,12 @@
 
 #include "Natrium/Core.hpp"
 #include "Natrium/Template/ArrayList.hpp"
+#include "Natrium/Core/InputConstants.hpp"
 
 #define NA_EVENT_BASE(x) struct {\
-						Na::Event_Type type = Na::Event_Type::x;\
-						Na::Window* window;\
+						Na::EventType type = Na::EventType::x;\
 						bool handled = false;\
+						Na::Window* window;\
 					 }
 
 namespace Na {
@@ -16,7 +17,7 @@ namespace Na {
 	using Window = WindowImpl_GLFW;
 #endif // NA_PLATFORM
 
-	enum class Event_Type : uint8_t {
+	enum class EventType : u8 {
 		None = 0,
 		KeyPressed, KeyReleased,
 		WindowResized, WindowClosed, WindowFocused, WindowLostFocus, WindowMinimized, WindowRestored,
@@ -25,43 +26,45 @@ namespace Na {
 
 	struct Event_KeyPressed {
 		NA_EVENT_BASE(KeyPressed);
-		uint16_t key;
+		Key key;
+		KeyMod mod;
 		bool repeat;
-		uint32_t padding = 0;
+		u32 padding = 0;
 	};
 
 	struct Event_KeyReleased {
 		NA_EVENT_BASE(KeyReleased);
-		uint16_t key;
-		uint32_t padding = 0;
+		Key key;
+		KeyMod mod;
+		u32 padding = 0;
 	};
 
 	struct Event_WindowResized {
 		NA_EVENT_BASE(WindowResized);
-		uint32_t width, height;
+		u32 width, height;
 	};
 
 	struct Event_WindowClosed {
 		NA_EVENT_BASE(WindowClosed);
-		uint32_t padding1 = 0, padding2 = 0;
+		u32 padding1 = 0, padding2 = 0;
 	};
 
 	struct Event_WindowFocused {
 		NA_EVENT_BASE(WindowFocused);
-		uint32_t padding1 = 0, padding2 = 0;
+		u32 padding1 = 0, padding2 = 0;
 	};
 	struct Event_WindowLostFocus {
 		NA_EVENT_BASE(WindowLostFocus);
-		uint32_t padding1 = 0, padding2 = 0;
+		u32 padding1 = 0, padding2 = 0;
 	};
 
 	struct Event_WindowMinimized {
 		NA_EVENT_BASE(WindowMinimized);
-		uint32_t padding1 = 0, padding2 = 0;
+		u32 padding1 = 0, padding2 = 0;
 	};
 	struct Event_WindowRestored {
 		NA_EVENT_BASE(WindowRestored);
-		uint32_t padding1 = 0, padding2 = 0;
+		u32 padding1 = 0, padding2 = 0;
 	};
 
 	struct Event_MouseMoved {
@@ -76,21 +79,21 @@ namespace Na {
 
 	struct Event_MouseButtonPressed {
 		NA_EVENT_BASE(MouseButtonPressed);
-		uint8_t button;
-		uint32_t padding = 0;
+		MouseButton button;
+		u32 padding = 0;
 	};
 	struct Event_MouseButtonReleased {
 		NA_EVENT_BASE(MouseButtonReleased);
-		uint8_t button;
-		uint32_t padding = 0;
+		MouseButton button;
+		u32 padding = 0;
 	};
 
 	union Event {
 		struct {
-			Event_Type type;
-			Window* window;
+			EventType type;
 			bool handled;
-			uint32_t padding1, padding2;
+			Window* window;
+			u32 padding1, padding2;
 		};
 
 		Event_KeyPressed key_pressed;

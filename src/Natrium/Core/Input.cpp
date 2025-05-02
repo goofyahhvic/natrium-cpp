@@ -8,19 +8,19 @@ namespace Na {
 	{
 		switch (e.type)
 		{
-		case Event_Type::KeyPressed:
+		case EventType::KeyPressed:
 			m_Keys[e.key_pressed.key] = true;
 			break;
-		case Event_Type::KeyReleased:
+		case EventType::KeyReleased:
 			m_Keys[e.key_released.key] = false;
 			break;
-		case Event_Type::MouseButtonPressed:
+		case EventType::MouseButtonPressed:
 			m_MBs[e.mouse_button_pressed.button] = true;
 			break;
-		case Event_Type::MouseButtonReleased:
+		case EventType::MouseButtonReleased:
 			m_MBs[e.mouse_button_released.button] = false;
 			break;
-		case Event_Type::MouseMoved:
+		case EventType::MouseMoved:
 			m_MousePos.x = e.mouse_moved.x;
 			m_MousePos.y = e.mouse_moved.y;
 			break;

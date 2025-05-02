@@ -88,30 +88,33 @@ namespace Na {
 
 			switch (action)
 			{
-			case GLFW_PRESS:
+			case KeyActions::k_Press:
 				Context::GetEventQueue().emplace(Event{.key_pressed = {
-					Event_Type::KeyPressed,
-					__window,
+					EventType::KeyPressed,
 					false,
-					(uint16_t)key,
+					__window,
+					(Key)key,
+					(KeyMod)mods,
 					false
 				}});
 				break;
-			case GLFW_REPEAT:
+			case KeyActions::k_Repeat:
 				Context::GetEventQueue().emplace(Event{.key_pressed = {
-					Event_Type::KeyPressed,
-					__window,
+					EventType::KeyPressed,
 					false,
-					(uint16_t)key,
+					__window,
+					(Key)key,
+					(KeyMod)mods,
 					true
 				}});
 				break;
-			case GLFW_RELEASE:
+			case KeyActions::k_Release:
 				Context::GetEventQueue().emplace(Event{.key_released = {
-					Event_Type::KeyReleased,
-					__window,
+					EventType::KeyReleased,
 					false,
-					(uint16_t)key
+					__window,
+					(Key)key,
+					(KeyMod)mods
 				}});
 				break;
 			}
@@ -122,9 +125,9 @@ namespace Na {
 			__window->m_Width = width;
 			__window->m_Height = height;
 			Context::GetEventQueue().emplace(Event{.window_resized = {
-				Event_Type::WindowResized,
-				__window,
+				EventType::WindowResized,
 				false,
+				__window,
 				(u32)width, (u32)height
 			}});
 		});
@@ -132,61 +135,53 @@ namespace Na {
 		{
 			Window* __window = (Window*)glfwGetWindowUserPointer(window);
 			Context::GetEventQueue().emplace(Event{.window_closed = {
-				Event_Type::WindowClosed,
-				__window,
-				false
+				EventType::WindowClosed,
+				false,
+				__window
 			}});
 		});
 		glfwSetWindowFocusCallback(_window, [](GLFWwindow* window, int focus)
 		{
 			Window* __window = (Window*)glfwGetWindowUserPointer(window);
-			if (focus == GLFW_TRUE)
-			{
-				__window->m_Focus = true;
+			__window->m_Focus = focus;
+			if (focus)
 				Context::GetEventQueue().emplace(Event{.window_focused = {
-					Event_Type::WindowFocused,
-					__window,
-					false
+					EventType::WindowFocused,
+					false,
+					__window
 				}});
-			} else
-			{
-				__window->m_Focus = false;
+			else
 				Context::GetEventQueue().emplace(Event{.window_lost_focus = {
-					Event_Type::WindowLostFocus,
-					__window,
-					false
+					EventType::WindowLostFocus,
+					false,
+					__window
 				}});
-			}
-
 		});
 		glfwSetWindowIconifyCallback(_window, [](GLFWwindow* window, int iconified)
 		{
 			Window* __window = (Window*)glfwGetWindowUserPointer(window);
+			__window->m_Minimized = iconified;
 			if (iconified)
-			{
-				__window->m_Minimized = true;
 				Context::GetEventQueue().emplace(Event{.window_minimized = {
-					Event_Type::WindowMinimized,
-					__window,
-					false
+					EventType::WindowMinimized,
+					false,
+					__window
 				}});
-			} else
-			{
+			else
 				__window->m_Minimized = false;
 				Context::GetEventQueue().emplace(Event{.window_restored = {
-					Event_Type::WindowRestored,
-					__window,
-					false
+					EventType::WindowRestored,
+					false,
+					__window
 				}});
-			}
 		});
 		glfwSetCursorPosCallback(_window, [](GLFWwindow* window, double x, double y)
 		{
 			Window* __window = (Window*)glfwGetWindowUserPointer(window);
 			Context::GetEventQueue().emplace(Event{.mouse_moved = {
-				Event_Type::MouseMoved,
-				__window,
+				EventType::MouseMoved,
 				false,
+				__window,
 				(float)x, (float)y
 			}});
 		});
@@ -194,9 +189,9 @@ namespace Na {
 		{
 			Window* __window = (Window*)glfwGetWindowUserPointer(window);
 			Context::GetEventQueue().emplace(Event{.mouse_scrolled = {
-				Event_Type::MouseScrolled,
-				__window,
+				EventType::MouseScrolled,
 				false,
+				__window,
 				(float)x_offset, (float)y_offset
 			}});
 		});
@@ -205,20 +200,20 @@ namespace Na {
 			Window* __window = (Window*)glfwGetWindowUserPointer(window);
 			switch (action)
 			{
-			case GLFW_PRESS:
+			case MouseButtonActions::k_Press:
 				Context::GetEventQueue().emplace(Event{.mouse_button_pressed = {
-					Event_Type::MouseButtonPressed,
-					__window,
+					EventType::MouseButtonPressed,
 					false,
-					(u8)button
+					__window,
+					(MouseButton)button
 				}});
 				break;
-			case GLFW_RELEASE:
+			case MouseButtonActions::k_Release:
 				Context::GetEventQueue().emplace(Event{.mouse_button_released = {
-					Event_Type::MouseButtonReleased,
-					__window,
+					EventType::MouseButtonReleased,
 					false,
-					(u8)button
+					__window,
+					(MouseButton)button
 				}});
 				break;
 			}

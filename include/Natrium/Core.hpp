@@ -31,17 +31,34 @@
     #define NA_WINDOWED_APP
 #endif
 
+// signed integers
 using i8  = int8_t;
 using i16 = int16_t;
 using i32 = int32_t;
 using i64 = int64_t;
 
+constexpr i8  k_I8Max  = INT8_MAX;
+constexpr i16 k_I16Max = INT16_MAX;
+constexpr i32 k_I32Max = INT32_MAX;
+constexpr i64 k_I64Max = INT64_MAX;
+
+// unsigned integers
 using u8  = uint8_t;
 using u16 = uint16_t;
 using u32 = uint32_t;
 using u64 = uint64_t;
 
-constexpr u64 NA_INVALID_HANDLE = UINT64_MAX;
+constexpr u8  k_U8Max  = UINT8_MAX;
+constexpr u16 k_U16Max = UINT16_MAX;
+constexpr u32 k_U32Max = UINT32_MAX;
+constexpr u64 k_U64Max = UINT64_MAX;
+
+// booleans
+using b8  = i8;
+using b32 = i32;
+
+constexpr b8 k_False = 0;
+constexpr b8 k_True = 1;
 
 using namespace std::literals::chrono_literals;
 using namespace std::literals::string_literals;
@@ -49,6 +66,8 @@ using namespace std::literals::string_view_literals;
 
 namespace Na {
     using Byte = unsigned char;
+
+    constexpr u64 k_InvalidHandle = k_U64Max;
 
     enum class BuildConfig : u8 {
         None = 0, Debug, Release, Distribution
