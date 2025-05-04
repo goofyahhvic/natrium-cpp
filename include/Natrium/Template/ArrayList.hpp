@@ -54,8 +54,8 @@ namespace Na {
 			if (!m_Capacity)
 				return;
 
-			while (m_Size)
-				this->pop();
+			for (u64 i = 0; i < m_Size; i++)
+				m_Buffer[i].~T();
 			free(m_Buffer);
 			memset(this, 0, sizeof(ArrayList));
 		}
@@ -97,8 +97,8 @@ namespace Na {
 		bool clear(void)
 		{
 			bool cleared = m_Size;
-			while (m_Size)
-				this->pop();
+			for (u64 i = 0; i < m_Size; i++)
+				m_Buffer[i].~T();
 			return cleared;
 		}
 
@@ -111,6 +111,8 @@ namespace Na {
 			m_Buffer = trealloc<T>(m_Buffer, new_capacity);
 			m_Capacity = new_capacity;
 		}
+
+		inline void reserve(u64 extra_capacity) { this->reallocate(m_Capacity + extra_capacity); }
 
 		inline void reallocate(u64 new_capacity, u64 new_size)
 		{
