@@ -4,7 +4,7 @@
 #include "Natrium/Graphics/VkContext.hpp"
 
 namespace Na {
-	IndexBuffer::IndexBuffer(u32 count, const u32* data, Renderer& renderer)
+	IndexBuffer::IndexBuffer(u32 count, const u32* data)
 	: m_Count(count),
 	m_Buffer(
 		count * sizeof(u32),
@@ -12,7 +12,7 @@ namespace Na {
 		vk::MemoryPropertyFlagBits::eDeviceLocal
 	)
 	{
-		this->set_data(data, renderer);
+		this->set_data(data);
 	}
 
 	void IndexBuffer::destroy(void)
@@ -20,7 +20,7 @@ namespace Na {
 		m_Buffer.destroy();
 	}
 
-	void IndexBuffer::set_data(const u32* data, Renderer& renderer)
+	void IndexBuffer::set_data(const u32* data)
 	{
 		vk::Device logical_device = VkContext::GetLogicalDevice();
 
@@ -34,16 +34,9 @@ namespace Na {
 		memcpy(memory, data, m_Buffer.size);
 		logical_device.unmapMemory(stage_buffer.memory);
 
-		m_Buffer.copy(stage_buffer, renderer.single_time_cmd_pool());
+		m_Buffer.copy(stage_buffer);
 
 		stage_buffer.destroy();
-	}
-
-	void IndexBuffer::draw(const VertexBuffer& vertex_buffer, u32 instance_count, FrameData& fd) const
-	{
-		fd.cmd_buffer.bindVertexBuffers(0, { vertex_buffer.native() }, {0});
-		fd.cmd_buffer.bindIndexBuffer(m_Buffer.buffer, 0, vk::IndexType::eUint32);
-		fd.cmd_buffer.drawIndexed(m_Count, instance_count, 0, 0, 0);
 	}
 
 	IndexBuffer::IndexBuffer(IndexBuffer&& other)

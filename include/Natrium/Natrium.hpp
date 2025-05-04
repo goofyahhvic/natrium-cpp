@@ -18,13 +18,15 @@
 #include "./Assets/ShaderAsset.hpp"
 #include "./Assets/ModelAsset.hpp"
 
-#include "./Graphics/Renderer.hpp"
+#include "./Graphics/Renderer/RendererSettings.hpp"
+#include "./Graphics/Renderer/RendererCore.hpp"
 #include "./Graphics/Pipeline.hpp"
 #include "./Graphics/Buffers/VertexBuffer.hpp"
 #include "./Graphics/Buffers/IndexBuffer.hpp"
 #include "./Graphics/Buffers/UniformBuffer.hpp"
 #include "./Graphics/Buffers/StorageBuffer.hpp"
 #include "./Graphics/Texture.hpp"
+#include "./Graphics/Renderer/Renderer.hpp"
 
 // entry point
 #include "./Main.hpp"

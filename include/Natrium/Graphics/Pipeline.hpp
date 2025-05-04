@@ -1,7 +1,7 @@
 #if !defined(NA_PIPELINE_HPP)
 #define NA_PIPELINE_HPP
 
-#include "Natrium/Graphics/Renderer.hpp"
+#include "Natrium/Graphics/Renderer/RendererCore.hpp"
 #include "Natrium/Assets/ShaderAsset.hpp"
 
 namespace Na {
@@ -62,13 +62,18 @@ namespace Na {
 	};
 	using ShaderUniformLayout = std::initializer_list<ShaderUniform>;
 
+	struct PushConstant {
+		ShaderStageBits shader_stage;
+		u32 size;
+		u32 offset = 0;
+	};
 	using PushConstantLayout = std::initializer_list<PushConstant>;
 
 	class GraphicsPipeline {
 	public:
 		GraphicsPipeline(void) = default;
 		GraphicsPipeline(
-			Renderer& renderer,
+			RendererCore& renderer_core,
 			const PipelineShaderInfos& handles = {},
 			const ShaderAttributeLayout& vertex_buffer_layout = {},
 			const ShaderUniformLayout& uniform_data_layout = {},

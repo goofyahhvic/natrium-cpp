@@ -27,7 +27,7 @@ namespace Na {
 		DeviceBuffer(DeviceBuffer&& other);
 		DeviceBuffer& operator=(DeviceBuffer&& other);
 
-		void copy(const DeviceBuffer& other, vk::CommandPool cmd_pool);
+		void copy(const DeviceBuffer& other);
 
 		[[nodiscard]] inline operator bool(void) const { return buffer && size && memory; }
 	};

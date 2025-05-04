@@ -2,7 +2,6 @@
 #include "Natrium/Graphics/Buffers/DeviceBuffer.hpp"
 
 #include "Natrium/Graphics/VkContext.hpp"
-#include "Natrium/Graphics/Renderer.hpp"
 
 namespace Na {
 	u32 FindMemoryType(u32 typeFilter, vk::MemoryPropertyFlags properties)
@@ -53,9 +52,9 @@ namespace Na {
 		memset(this, 0, sizeof(DeviceBuffer));
 	}
 
-	void DeviceBuffer::copy(const DeviceBuffer& other, vk::CommandPool cmd_pool)
+	void DeviceBuffer::copy(const DeviceBuffer& other) 
 	{
-		vk::CommandBuffer cmd_buffer = BeginSingleTimeCommands(cmd_pool);
+		vk::CommandBuffer cmd_buffer = VkContext::BeginSingleTimeCommands();
 
 		vk::BufferCopy copy_region;
 		copy_region.srcOffset = 0;
@@ -64,7 +63,7 @@ namespace Na {
 
 		cmd_buffer.copyBuffer(other.buffer, this->buffer, 1, &copy_region);
 
-		EndSingleTimeCommands(cmd_buffer, cmd_pool);
+		VkContext::EndSingleTimeCommands(cmd_buffer);
 	}
 
 	DeviceBuffer::DeviceBuffer(DeviceBuffer&& other)

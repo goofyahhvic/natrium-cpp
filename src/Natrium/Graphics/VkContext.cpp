@@ -280,11 +280,10 @@ namespace Na {
 		return create_info;
 	}
 
-	static vk::Device createLogicalDevice(vk::PhysicalDevice physical_device, vk::SurfaceKHR surface, vk::Queue& queue)
+	static vk::Device createLogicalDevice(vk::PhysicalDevice physical_device, QueueFamilyIndices queue_indices, vk::Queue& queue)
 	{
-		QueueFamilyIndices indices = QueueFamilyIndices::Get(physical_device, surface);
 		Na::ArrayList<vk::DeviceQueueCreateInfo> queue_create_infos;
-		queue_create_infos.emplace(createQueueCreateInfo(indices.graphics));
+		queue_create_infos.emplace(createQueueCreateInfo(queue_indices.graphics));
 
 		vk::DeviceCreateInfo create_info;
 
@@ -300,9 +299,18 @@ namespace Na {
 		create_info.ppEnabledExtensionNames = requiredDeviceExtensions.ptr();
 
 		vk::Device device = physical_device.createDevice(create_info);
-		queue = device.getQueue(indices.graphics, 0);
+		queue = device.getQueue(queue_indices.graphics, 0);
 
 		return device;
+	}
+
+	static vk::CommandPool createSingleTimeCmdPool(vk::Device device, QueueFamilyIndices indices)
+	{
+		vk::CommandPoolCreateInfo single_time_pool_info;
+		single_time_pool_info.queueFamilyIndex = indices.graphics;
+		single_time_pool_info.flags = vk::CommandPoolCreateFlagBits::eTransient;
+
+		return device.createCommandPool(single_time_pool_info);
 	}
 
 	VkContext VkContext::Initialize(void)
@@ -319,8 +327,11 @@ namespace Na {
 		vk::SurfaceKHR temp_surface = createWindowSurface(temp_window);
 
 		context.m_PhysicalDevice = pickPhysicalDevice(context.m_Instance, temp_surface);
+		auto queue_indices = QueueFamilyIndices::Get(context.m_PhysicalDevice, temp_surface);
+
 		context.m_MSAASamples = getMaxSampleCount(context.m_PhysicalDevice);
-		context.m_LogicalDevice = createLogicalDevice(context.m_PhysicalDevice, temp_surface, context.m_GraphicsQueue);
+		context.m_LogicalDevice = createLogicalDevice(context.m_PhysicalDevice, queue_indices, context.m_GraphicsQueue);
+		context.m_SingleTimeCmdPool = createSingleTimeCmdPool(context.m_LogicalDevice, queue_indices);
 
 		vkDestroySurfaceKHR(context.m_Instance, temp_surface, nullptr);
 		glfwDestroyWindow(temp_window);
@@ -330,6 +341,9 @@ namespace Na {
 
 	void VkContext::Shutdown(void)
 	{
+		if (s_Context->m_SingleTimeCmdPool)
+			s_Context->m_LogicalDevice.destroyCommandPool(s_Context->m_SingleTimeCmdPool);
+
 		if (s_Context->m_LogicalDevice)
 			s_Context->m_LogicalDevice.destroy();
 
@@ -340,6 +354,38 @@ namespace Na {
 			s_Context->m_Instance.destroy();
 
 		s_Context = nullptr;
+	}
+
+	vk::CommandBuffer VkContext::BeginSingleTimeCommands(void)
+	{
+		vk::CommandBufferAllocateInfo alloc_info;
+		alloc_info.level = vk::CommandBufferLevel::ePrimary;
+		alloc_info.commandPool = s_Context->m_SingleTimeCmdPool;
+		alloc_info.commandBufferCount = 1;
+
+		vk::CommandBuffer cmd_buffer;
+		(void)VkContext::GetLogicalDevice().allocateCommandBuffers(&alloc_info, &cmd_buffer);
+
+		vk::CommandBufferBeginInfo begin_info;
+		begin_info.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
+
+		cmd_buffer.begin(begin_info);
+
+		return cmd_buffer;
+	}
+
+	void VkContext::EndSingleTimeCommands(vk::CommandBuffer cmd_buffer)
+	{
+		cmd_buffer.end();
+
+		vk::SubmitInfo submit_info;
+		submit_info.commandBufferCount = 1;
+		submit_info.pCommandBuffers = &cmd_buffer;
+
+		(void)VkContext::GetGraphicsQueue().submit(1, &submit_info, nullptr);
+		VkContext::GetGraphicsQueue().waitIdle();
+
+		VkContext::GetLogicalDevice().freeCommandBuffers(s_Context->m_SingleTimeCmdPool, 1, &cmd_buffer);
 	}
 
 	VkContext::VkContext(VkContext&& other)

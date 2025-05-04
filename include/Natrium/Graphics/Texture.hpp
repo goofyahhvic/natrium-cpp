@@ -3,13 +3,13 @@
 
 #include "Natrium/Assets/ImageAsset.hpp"
 #include "Natrium/Graphics/DeviceImage.hpp"
-#include "Natrium/Graphics/Renderer.hpp"
+#include "Natrium/Graphics/Pipeline.hpp"
 
 namespace Na {
 	class Texture {
 	public:
 		Texture(void) = default;
-		Texture(const Image& img, Renderer& renderer);
+		Texture(const Image& img, const RendererSettings& renderer_settings);
 		void destroy(void);
 		inline ~Texture(void) { this->destroy(); }
 

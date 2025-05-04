@@ -31,6 +31,9 @@ namespace Na {
 
 		static inline void WaitForRemainingDeviceTasks(void) { s_Context->m_LogicalDevice.waitIdle(); }
 
+		static vk::CommandBuffer BeginSingleTimeCommands(void);
+		static void EndSingleTimeCommands(vk::CommandBuffer cmd_buffer);
+
 		[[nodiscard]] static inline vk::Instance               GetInstance(void)       { return s_Context->m_Instance; }
 		[[nodiscard]] static inline vk::DebugUtilsMessengerEXT GetDebugMessenger(void) { return s_Context->m_DebugMessenger; }
 		[[nodiscard]] static inline vk::PhysicalDevice         GetPhysicalDevice(void) { return s_Context->m_PhysicalDevice; }
@@ -42,14 +45,17 @@ namespace Na {
 		[[nodiscard]] static inline vk::SampleCountFlagBits    GetMSAASamples(bool enabled = true) { return enabled ? s_Context->m_MSAASamples : vk::SampleCountFlagBits::e1; }
 
 	private:
-		vk::Instance               m_Instance       = nullptr;
-		vk::DebugUtilsMessengerEXT m_DebugMessenger = nullptr;
-		vk::PhysicalDevice         m_PhysicalDevice = nullptr;
-		vk::Device                 m_LogicalDevice  = nullptr;
+		vk::Instance               m_Instance;
+		vk::DebugUtilsMessengerEXT m_DebugMessenger;
+		vk::PhysicalDevice         m_PhysicalDevice;
+		vk::Device                 m_LogicalDevice;
+												    
+		vk::Queue                  m_GraphicsQueue;
 
-		vk::Queue                  m_GraphicsQueue  = nullptr;
+		vk::CommandPool            m_SingleTimeCmdPool;
 
-		vk::SampleCountFlagBits    m_MSAASamples    = vk::SampleCountFlagBits::e1;
+
+		vk::SampleCountFlagBits    m_MSAASamples = vk::SampleCountFlagBits::e1;
 
 		static inline VkContext* s_Context = nullptr;
 	};

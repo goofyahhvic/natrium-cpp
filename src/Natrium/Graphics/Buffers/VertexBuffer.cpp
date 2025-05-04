@@ -6,14 +6,14 @@
 #include "Natrium/Core/Logger.hpp"
 
 namespace Na {
-	VertexBuffer::VertexBuffer(u64 size, const void* data, Renderer& renderer)
+	VertexBuffer::VertexBuffer(u64 size, const void* data)
 	: m_Buffer(
 		size,
 		vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer,
 		vk::MemoryPropertyFlagBits::eDeviceLocal
 	)
 	{
-		this->set_data(data, renderer);
+		this->set_data(data);
 	}
 
 	void VertexBuffer::destroy(void)
@@ -21,7 +21,7 @@ namespace Na {
 		m_Buffer.destroy();
 	}
 
-	void VertexBuffer::set_data(const void* data, Renderer& renderer)
+	void VertexBuffer::set_data(const void* data)
 	{
 		vk::Device logical_device = VkContext::GetLogicalDevice();
 
@@ -35,7 +35,7 @@ namespace Na {
 		memcpy(memory, data, m_Buffer.size);
 		logical_device.unmapMemory(stage_buffer.memory);
 
-		m_Buffer.copy(stage_buffer, renderer.single_time_cmd_pool());
+		m_Buffer.copy(stage_buffer);
 
 		stage_buffer.destroy();
 	}

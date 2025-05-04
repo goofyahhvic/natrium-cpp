@@ -41,7 +41,7 @@ namespace Na {
 		return VkContext::GetLogicalDevice().createSampler(create_info);
 	}
 
-	Texture::Texture(const Image& img, Renderer& renderer)
+	Texture::Texture(const Image& img, const RendererSettings& renderer_settings)
 	{
 		vk::Device logical_device = VkContext::GetLogicalDevice();
 
@@ -56,7 +56,7 @@ namespace Na {
 		logical_device.unmapMemory(buffer.memory);
 
 		m_Image = DeviceImage(
-			{ (u32)img.width(), (u32)img.height(), 1,}, // extent
+			{ (u32)img.width(), (u32)img.height(), 1 }, // extent
 			vk::ImageAspectFlagBits::eColor,
 			vk::Format::eR8G8B8A8Srgb,
 			vk::ImageTiling::eOptimal,
@@ -66,9 +66,9 @@ namespace Na {
 			vk::MemoryPropertyFlagBits::eDeviceLocal
 		);
 
-		m_Image.transition_layout(vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal, renderer.single_time_cmd_pool());
-		m_Image.copy_from_buffer(buffer.buffer, renderer.single_time_cmd_pool());
-		m_Image.transition_layout(vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal, renderer.single_time_cmd_pool());
+		m_Image.transition_layout(vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal);
+		m_Image.copy_from_buffer(buffer.buffer);
+		m_Image.transition_layout(vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
 
 		buffer.destroy();
 
@@ -77,8 +77,8 @@ namespace Na {
 		m_Sampler = createSampler(
 			vk::Filter::eLinear, // oversampling filter
 			vk::Filter::eLinear, // undersampling filter
-			renderer.config().anisotropy_enabled,
-			renderer.config().max_anisotropy
+			renderer_settings.anisotropy_enabled,
+			renderer_settings.max_anisotropy
 		);
 	}
 

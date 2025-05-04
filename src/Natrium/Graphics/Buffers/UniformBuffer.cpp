@@ -6,14 +6,14 @@
 #include "Internal.hpp"
 
 namespace Na {
-	UniformBuffer::UniformBuffer(u64 size, Renderer& renderer)
+	UniformBuffer::UniformBuffer(u64 size, const RendererSettings& renderer_settings)
 	: m_Size(size)
 	{
 		vk::Device logical_device = VkContext::GetLogicalDevice();
 
-		u32 max_frames_in_flight = renderer.config().max_frames_in_flight;
+		u32 max_frames_in_flight = renderer_settings.max_frames_in_flight;
 
-		m_BufferDatas.resize(max_frames_in_flight);
+		m_Datas.resize(max_frames_in_flight);
 
 		for (u64 i = 0; i < max_frames_in_flight; i++)
 		{
@@ -22,9 +22,9 @@ namespace Na {
 				vk::BufferUsageFlagBits::eUniformBuffer,
 				vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent
 			);
-			m_BufferDatas[i].buffer = std::exchange(buffer.buffer, nullptr);
-			m_BufferDatas[i].memory = std::exchange(buffer.memory, nullptr);
-			m_BufferDatas[i].mapped = logical_device.mapMemory(m_BufferDatas[i].memory, 0, size);
+			m_Datas[i].buffer = std::exchange(buffer.buffer, nullptr);
+			m_Datas[i].memory = std::exchange(buffer.memory, nullptr);
+			m_Datas[i].mapped = logical_device.mapMemory(m_Datas[i].memory, 0, size);
 		}
 	}
 
@@ -35,21 +35,21 @@ namespace Na {
 
 		vk::Device logical_device = VkContext::GetLogicalDevice();
 
-		for (const BufferData& buffer_data : m_BufferDatas)
+		for (const Data& buffer_data : m_Datas)
 		{
 			logical_device.destroyBuffer(buffer_data.buffer);
 			logical_device.freeMemory(buffer_data.memory);
 		}
 
-		m_BufferDatas.clear();
+		m_Datas.clear();
 		m_Size = 0;
 	}
 
 	void UniformBuffer::bind_to_pipeline(u32 binding, GraphicsPipeline& pipeline) const
 	{
-		for (u64 i = 0; i < m_BufferDatas.size(); i++)
+		for (u64 i = 0; i < m_Datas.size(); i++)
 		{
-			vk::DescriptorBufferInfo buffer_info(m_BufferDatas[i].buffer, 0, m_Size);
+			vk::DescriptorBufferInfo buffer_info(m_Datas[i].buffer, 0, m_Size);
 
 			Internal::WriteToDescriptorSet(
 				pipeline.descriptor_sets()[i],
@@ -63,13 +63,8 @@ namespace Na {
 		}
 	}
 
-	void UniformBuffer::set_data(const void* data, FrameData& fd)
-	{
-		memcpy(m_BufferDatas[fd.index].mapped, data, m_Size);
-	}
-
 	UniformBuffer::UniformBuffer(UniformBuffer&& other)
-	: m_BufferDatas(std::move(other.m_BufferDatas)),
+	: m_Datas(std::move(other.m_Datas)),
 	m_Size(std::exchange(other.m_Size, 0))
 	{}
 
@@ -77,13 +72,13 @@ namespace Na {
 	{
 		vk::Device logical_device = VkContext::GetLogicalDevice();
 
-		for (const BufferData& buffer_data : m_BufferDatas)
+		for (const Data& buffer_data : m_Datas)
 		{
 			logical_device.destroyBuffer(buffer_data.buffer);
 			logical_device.freeMemory(buffer_data.memory);
 		}
 
-		m_BufferDatas = std::move(other.m_BufferDatas);
+		m_Datas = std::move(other.m_Datas);
 		m_Size = std::exchange(other.m_Size, 0);
 
 		return *this;

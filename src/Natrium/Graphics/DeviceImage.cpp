@@ -3,7 +3,6 @@
 
 #include "Natrium/Graphics/VkContext.hpp"
 #include "Natrium/Graphics/Buffers/DeviceBuffer.hpp"
-#include "Natrium/Graphics/Renderer.hpp"
 
 namespace Na {
 	vk::Format FindSupportedFormat(
@@ -97,15 +96,11 @@ namespace Na {
 		memset(this, 0, sizeof(DeviceImage));
 	}
 
-	void DeviceImage::transition_layout(
-		vk::ImageLayout old_layout,
-		vk::ImageLayout new_layout,
-		vk::CommandPool cmd_pool
-	)
+	void DeviceImage::transition_layout(vk::ImageLayout old_layout, vk::ImageLayout new_layout)
 	{
 		vk::Device logical_device = VkContext::GetLogicalDevice();
 
-		vk::CommandBuffer cmd_buffer = BeginSingleTimeCommands(cmd_pool);
+		vk::CommandBuffer cmd_buffer = VkContext::BeginSingleTimeCommands();
 
 		vk::ImageMemoryBarrier barrier;
 
@@ -152,14 +147,14 @@ namespace Na {
 			1, &barrier // image memory barriers
 		);
 
-		EndSingleTimeCommands(cmd_buffer, cmd_pool);
+		VkContext::EndSingleTimeCommands(cmd_buffer);
 	}
 
-	void DeviceImage::copy_from_buffer(vk::Buffer buffer, vk::CommandPool cmd_pool)
+	void DeviceImage::copy_from_buffer(vk::Buffer buffer)
 	{
 		vk::Device logical_device = VkContext::GetLogicalDevice();
 
-		vk::CommandBuffer cmd_buffer = BeginSingleTimeCommands(cmd_pool);
+		vk::CommandBuffer cmd_buffer = VkContext::BeginSingleTimeCommands();
 
 		vk::BufferImageCopy region;
 		region.bufferOffset = 0;
@@ -181,7 +176,7 @@ namespace Na {
 			1, &region
 		);
 
-		EndSingleTimeCommands(cmd_buffer, cmd_pool);
+		VkContext::EndSingleTimeCommands(cmd_buffer);
 	}
 
 	DeviceImage::DeviceImage(DeviceImage&& other)

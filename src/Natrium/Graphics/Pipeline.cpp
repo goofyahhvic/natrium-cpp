@@ -101,7 +101,7 @@ namespace Na {
 	}
 
 	GraphicsPipeline::GraphicsPipeline(
-		Renderer& renderer,
+		RendererCore& renderer_core,
 		const PipelineShaderInfos& shader_infos,
 		const ShaderAttributeLayout& vertex_buffer_layout,
 		const ShaderUniformLayout& uniform_data_layout,
@@ -125,7 +125,7 @@ namespace Na {
 		auto viewport_info = viewportInfo();
 		auto input_assembly_info = inputAssemblyInfo();
 		auto rasterization_info = rasterizationInfo();
-		auto multisample_info = multisampleInfo(renderer.m_Config.msaa_enabled);
+		auto multisample_info = multisampleInfo(renderer_core.settings().msaa_enabled);
 		auto color_blend_attachment = colorBlendAttachment(false);
 		auto color_blend_info = colorBlendInfo(color_blend_attachment);
 		auto depth_stencil_info = depthStencilInfo();
@@ -156,7 +156,7 @@ namespace Na {
 		create_info.stageCount = (u32)shader_infos.size();
 		create_info.pStages = shader_infos.begin();
 
-		create_info.renderPass = renderer.m_RenderPass;
+		create_info.renderPass = renderer_core.render_pass();
 		create_info.layout = m_Layout;
 
 		create_info.pDynamicState = &dynamic_state_info;
@@ -172,13 +172,13 @@ namespace Na {
 
 		if (uniform_data_layout.size())
 		{
-			Na::ArrayVector<vk::DescriptorSetLayout> descriptor_layouts(renderer.m_Config.max_frames_in_flight);
+			Na::ArrayVector<vk::DescriptorSetLayout> descriptor_layouts(renderer_core.settings().max_frames_in_flight);
 			for (vk::DescriptorSetLayout& descriptor_layout : descriptor_layouts)
 				descriptor_layout = m_DescriptorLayout;
 
-			m_DescriptorPool = createDescriptorPool(uniform_data_layout, renderer.m_Config.max_frames_in_flight);
+			m_DescriptorPool = createDescriptorPool(uniform_data_layout, renderer_core.settings().max_frames_in_flight);
 			m_DescriptorSets = createDescriptorSets(
-				renderer.m_Config.max_frames_in_flight,
+				renderer_core.settings().max_frames_in_flight,
 				descriptor_layouts.ptr(),
 				m_DescriptorPool
 			);

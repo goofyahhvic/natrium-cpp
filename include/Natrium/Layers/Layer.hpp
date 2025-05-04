@@ -3,7 +3,6 @@
 
 #include "Natrium/Core.hpp"
 #include "Natrium/Core/Event.hpp"
-#include "Natrium/Graphics/Renderer.hpp"
 
 namespace Na {
 	class Layer {
@@ -16,7 +15,7 @@ namespace Na {
 
 		virtual void on_event(Event& e) {}
 		virtual void update(double dt) {}
-		virtual void draw(FrameData& fd) {}
+		virtual void draw(void) {}
 
 		[[nodiscard]] inline i64 priority(void) const { return m_Priority; }
 	private:

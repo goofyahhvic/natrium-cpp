@@ -43,13 +43,9 @@ namespace Na {
 		DeviceImage(DeviceImage&& other);
 		DeviceImage& operator=(DeviceImage&& other);
 
-		void transition_layout(
-			vk::ImageLayout old_layout,
-			vk::ImageLayout new_layout,
-			vk::CommandPool cmd_pool
-		);
+		void transition_layout(vk::ImageLayout old_layout, vk::ImageLayout new_layout);
 
-		void copy_from_buffer(vk::Buffer buffer, vk::CommandPool cmd_pool);
+		void copy_from_buffer(vk::Buffer buffer);
 
 		[[nodiscard]] inline operator bool(void) const { return format != vk::Format::eUndefined; }
 	};
