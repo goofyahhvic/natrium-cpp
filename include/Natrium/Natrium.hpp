@@ -9,6 +9,9 @@
 #include "./Core/Input.hpp"
 #include "./Core/DeltaTime.hpp"
 
+#include "./Layers/Layer.hpp"
+#include "./Layers/LayerManager.hpp"
+
 #include "./Assets/Asset.hpp"
 #include "./Assets/AssetRegistry.hpp"
 #include "./Assets/ImageAsset.hpp"
