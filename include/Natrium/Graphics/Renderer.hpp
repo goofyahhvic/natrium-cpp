@@ -8,6 +8,7 @@
 
 namespace Na {
 	class GraphicsPipeline;
+	class Renderer;
 
 	struct PushConstant {
 		ShaderStageBits shader_stage;
@@ -27,13 +28,20 @@ namespace Na {
 	};
 
 	struct FrameData {
+		void bind_pipeline(const GraphicsPipeline& pipeline);
+
+		void set_push_constant(PushConstant push_constant, const void* data, const GraphicsPipeline& pipeline);
+
 		bool              skipped = false;
+		u32               index;
 
 		vk::CommandBuffer cmd_buffer;
 
 		vk::Semaphore     image_available_semaphore;
 		vk::Semaphore     render_finished_semaphore;
 		vk::Fence         in_flight_fence;
+
+		Renderer*         renderer;
 
 		[[nodiscard]] inline operator bool(void) const { return !skipped; }
 	};
@@ -53,10 +61,6 @@ namespace Na {
 
 		FrameData& begin_frame(const glm::vec4& color = Colors::k_Black);
 		void end_frame(void);
-
-		void bind_pipeline(const GraphicsPipeline& pipeline);
-
-		void set_push_constant(PushConstant push_constant, const void* data, const GraphicsPipeline& pipeline);
 
 		[[nodiscard]] inline RendererConfig config(void) const { return m_Config; }
 		[[nodiscard]] inline vk::CommandPool single_time_cmd_pool(void) const { return m_SingleTimeCmdPool; }
@@ -86,6 +90,7 @@ namespace Na {
 		void _recreate_swapchain(void);
 	private:
 		friend class GraphicsPipeline;
+		friend struct FrameData;
 
 		Window* m_Window = nullptr;
 		vk::SurfaceKHR m_Surface;

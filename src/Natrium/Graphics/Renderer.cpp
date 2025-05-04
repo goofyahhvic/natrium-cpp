@@ -45,11 +45,47 @@ namespace Na {
 		max_anisotropy = VkContext::GetPhysicalDevice().getProperties().limits.maxSamplerAnisotropy;
 	}
 
+	void FrameData::bind_pipeline(const GraphicsPipeline& pipeline)
+	{
+		vk::Device logical_device = VkContext::GetLogicalDevice();
+
+		this->cmd_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline.pipeline());
+
+		if (!pipeline.descriptor_sets().empty())
+			this->cmd_buffer.bindDescriptorSets(
+				vk::PipelineBindPoint::eGraphics,
+				pipeline.layout(),
+				0, // first set
+				1, &pipeline.descriptor_sets()[this->index],
+				0, nullptr // dynamic offsets
+			);
+	}
+
+	void FrameData::set_push_constant(
+		PushConstant push_constant,
+		const void* data,
+		const GraphicsPipeline& pipeline
+	)
+	{
+		this->cmd_buffer.pushConstants(
+			pipeline.layout(),
+			(vk::ShaderStageFlagBits)push_constant.shader_stage,
+			push_constant.offset,
+			push_constant.size,
+			data
+		);
+	}
+
 	Renderer::Renderer(Window& window, const RendererConfig& config)
 	: m_Window(&window),
 	m_Config(config)
 	{
 		m_Frames.resize(m_Config.max_frames_in_flight);
+		for (u32 i = 0; i < (u32)m_Frames.size(); i++)
+		{
+			m_Frames[i].index = i;
+			m_Frames[i].renderer = this;
+		}
 
 		_create_window_surface();
 		_create_swapchain();
@@ -238,40 +274,6 @@ namespace Na {
 		}
 
 		m_CurrentFrame = (m_CurrentFrame + 1) % m_Config.max_frames_in_flight;
-	}
-
-	void Renderer::bind_pipeline(const GraphicsPipeline& pipeline)
-	{
-		vk::Device logical_device = VkContext::GetLogicalDevice();
-		FrameData& fd = m_Frames[m_CurrentFrame];
-
-		fd.cmd_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline.pipeline());
-
-		if (!pipeline.descriptor_sets().empty())
-			fd.cmd_buffer.bindDescriptorSets(
-				vk::PipelineBindPoint::eGraphics,
-				pipeline.layout(),
-				0, // first set
-				1, &pipeline.descriptor_sets()[m_CurrentFrame],
-				0, nullptr // dynamic offsets
-			);
-	}
-
-	void Renderer::set_push_constant(
-		PushConstant push_constant,
-		const void* data,
-		const GraphicsPipeline& pipeline
-	)
-	{
-		FrameData& fd = m_Frames[m_CurrentFrame];
-
-		fd.cmd_buffer.pushConstants(
-			pipeline.layout(),
-			(vk::ShaderStageFlagBits)push_constant.shader_stage,
-			push_constant.offset,
-			push_constant.size,
-			data
-		);
 	}
 
 	void Renderer::_create_window_surface(void)

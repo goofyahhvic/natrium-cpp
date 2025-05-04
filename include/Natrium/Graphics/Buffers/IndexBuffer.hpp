@@ -18,8 +18,8 @@ namespace Na {
 
 		void set_data(const u32* data, Renderer& renderer);
 
-		void draw(const VertexBuffer& vertex_buffer, u32 instance_count, Renderer& renderer) const;
-		inline void draw(const VertexBuffer& vertex_buffer, Renderer& renderer) const { this->draw(vertex_buffer, 1, renderer); }
+		void draw(const VertexBuffer& vertex_buffer, u32 instance_count, FrameData& fd) const;
+		inline void draw(const VertexBuffer& vertex_buffer, FrameData& fd) const { this->draw(vertex_buffer, 1, fd); }
 
 		[[nodiscard]] inline u64 size(void) const { return m_Buffer.size; }
 		[[nodiscard]] inline u32 count(void) const { return m_Count; }
