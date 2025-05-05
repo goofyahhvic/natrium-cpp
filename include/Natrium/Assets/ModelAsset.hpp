@@ -21,8 +21,8 @@ namespace Na {
 		[[nodiscard]] inline u64 vertex_data_size(void) const { return m_Vertices.size() * sizeof(Vertex); }
 		[[nodiscard]] inline u64 index_data_size(void) const { return m_Indices.size() * sizeof(u32); }
 
-		[[nodiscard]] inline u64 vertex_count(void) const { return m_Vertices.size(); }
-		[[nodiscard]] inline u64 index_count(void) const { return m_Indices.size(); }
+		[[nodiscard]] inline u32 vertex_count(void) const { return (u32)m_Vertices.size(); }
+		[[nodiscard]] inline u32 index_count(void) const { return (u32)m_Indices.size(); }
 
 		[[nodiscard]] inline Na::ArrayList<Vertex>& vertices(void) { return m_Vertices; }
 		[[nodiscard]] inline const Na::ArrayList<Vertex>& vertices(void) const { return m_Vertices; }
@@ -31,7 +31,6 @@ namespace Na {
 		[[nodiscard]] inline const Na::ArrayList<u32>& indices(void) const { return m_Indices; }
 
 		[[nodiscard]] inline operator bool(void) const override { return !m_Vertices.empty() && !m_Indices.empty(); };
-
 	private:
 		Na::ArrayList<Vertex> m_Vertices;
 		Na::ArrayList<u32> m_Indices;

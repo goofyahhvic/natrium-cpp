@@ -22,8 +22,9 @@ namespace Na {
 
 	void AssetRegistry::destroy(void)
 	{
-		this->clear();
+		m_Assets.clear();
 		m_AssetDir.clear();
+		m_ShaderOutputDir.clear();
 	}
 
 	ShaderModule AssetRegistry::create_shader_module_from_src(

@@ -12,9 +12,9 @@ namespace Na {
 		inline ~AssetRegistry(void) { this->destroy(); }
 
 		void destroy(void);
-		inline void clear(void) { m_Assets.clear(); }
 
 		inline void free_asset(const std::string_view& name) { m_Assets.erase(name); }
+		inline void free_all(void) { m_Assets.clear(); }
 
 		template<LoadableAsset T>
 		inline AssetHandle<T> load_asset(const std::string_view& path)

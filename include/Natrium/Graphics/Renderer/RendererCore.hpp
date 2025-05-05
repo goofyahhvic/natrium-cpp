@@ -15,13 +15,13 @@ namespace Na {
 		void destroy(void);
 		inline ~RendererCore(void) { this->destroy(); }
 
-		[[nodiscard]] inline RendererSettings settings(void) const { return m_Settings; }
+		[[nodiscard]] inline const RendererSettings& settings(void) const { return m_Settings; }
 
 		[[nodiscard]] inline u32 width(void) const { return m_Width; }
 		[[nodiscard]] inline u32 height(void) const { return m_Height; }
 
 		inline void set_viewport(const glm::vec4& viewport);
-		[[nodiscard]] inline glm::vec4 viewport(void) const { return { m_Viewport.x, m_Viewport.y, m_Viewport.width, m_Viewport.height }; }
+		[[nodiscard]] inline glm::vec4 viewport(void) const { return glm::vec4(m_Viewport.x, m_Viewport.y, m_Viewport.width, m_Viewport.height); }
 
 		[[nodiscard]] inline Window& window(void) { return *m_Window; }
 		[[nodiscard]] inline const Window& window(void) const { return *m_Window; }

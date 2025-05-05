@@ -14,6 +14,7 @@ namespace Na {
 	public:
 		LayerManager(u64 capacity = 2) : m_Layers(capacity) {}
 		~LayerManager(void) = default;
+		inline void destroy(void) { m_Layers.~ArrayList(); }
 
 		inline void reserve(u64 extra_capacity) { m_Layers.reallocate(m_Layers.capacity() + extra_capacity); }
 
