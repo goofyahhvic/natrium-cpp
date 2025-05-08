@@ -7,79 +7,57 @@
 
 namespace Na {
 	UniformBuffer::UniformBuffer(u64 size, const RendererSettings& renderer_settings)
-	: m_Size(size)
+	: m_PerFrameSize(size)
 	{
-		vk::Device logical_device = VkContext::GetLogicalDevice();
+		static VkDeviceSize x_Alignment = VkContext::GetPhysicalDevice().getProperties().limits.minUniformBufferOffsetAlignment;
 
-		u32 max_frames_in_flight = renderer_settings.max_frames_in_flight;
+		m_AlignedSize = (size + x_Alignment - 1) & ~(x_Alignment - 1);
 
-		m_Datas.resize(max_frames_in_flight);
+		m_Buffer = DeviceBuffer(
+			m_AlignedSize * renderer_settings.max_frames_in_flight,
+			vk::BufferUsageFlagBits::eUniformBuffer,
+			vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent
+		);
 
-		for (u64 i = 0; i < max_frames_in_flight; i++)
-		{
-			DeviceBuffer buffer(
-				size,
-				vk::BufferUsageFlagBits::eUniformBuffer,
-				vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent
-			);
-			m_Datas[i].buffer = std::exchange(buffer.buffer, nullptr);
-			m_Datas[i].memory = std::exchange(buffer.memory, nullptr);
-			m_Datas[i].mapped = logical_device.mapMemory(m_Datas[i].memory, 0, size);
-		}
+		m_Mapped = VkContext::GetLogicalDevice().mapMemory(m_Buffer.memory, 0, size);
 	}
 
 	void UniformBuffer::destroy(void)
 	{
-		if (!m_Size)
-			return;
-
-		vk::Device logical_device = VkContext::GetLogicalDevice();
-
-		for (const Data& buffer_data : m_Datas)
-		{
-			logical_device.destroyBuffer(buffer_data.buffer);
-			logical_device.freeMemory(buffer_data.memory);
-		}
-
-		m_Datas.clear();
-		m_Size = 0;
+		m_Buffer.destroy();
 	}
 
 	void UniformBuffer::bind_to_pipeline(u32 binding, GraphicsPipeline& pipeline) const
 	{
-		for (u64 i = 0; i < m_Datas.size(); i++)
-		{
-			vk::DescriptorBufferInfo buffer_info(m_Datas[i].buffer, 0, m_Size);
+		vk::DescriptorBufferInfo buffer_info(m_Buffer.buffer, 0, m_AlignedSize);
 
-			Internal::WriteToDescriptorSet(
-				pipeline.descriptor_sets()[i],
-				binding,
-				vk::DescriptorType::eUniformBuffer,
-				1, // count
-				&buffer_info,
-				nullptr, // image info
-				nullptr // texel buffer view
-			);
-		}
+		Internal::WriteToDescriptorSet(
+			pipeline.descriptor_set(),
+			binding,
+			vk::DescriptorType::eUniformBuffer,
+			1, // count
+			&buffer_info,
+			nullptr, // image info
+			nullptr // texel buffer view
+		);
+		for (u64 i = pipeline.dynamic_offset_index(); i < pipeline.dynamic_offsets().size(); i += pipeline.dynamic_offset_count())
+			pipeline.dynamic_offsets()[i] = u32(m_AlignedSize * i);
+		pipeline.increment_dynamic_offset_index();
 	}
 
 	UniformBuffer::UniformBuffer(UniformBuffer&& other)
-	: m_Datas(std::move(other.m_Datas)),
-	m_Size(std::exchange(other.m_Size, 0))
+	: m_Buffer(std::move(other.m_Buffer)),
+	m_Mapped(std::exchange(other.m_Mapped, nullptr)),
+	m_PerFrameSize(other.m_PerFrameSize),
+	m_AlignedSize(other.m_AlignedSize)
 	{}
 
 	UniformBuffer& UniformBuffer::operator=(UniformBuffer&& other)
 	{
-		vk::Device logical_device = VkContext::GetLogicalDevice();
-
-		for (const Data& buffer_data : m_Datas)
-		{
-			logical_device.destroyBuffer(buffer_data.buffer);
-			logical_device.freeMemory(buffer_data.memory);
-		}
-
-		m_Datas = std::move(other.m_Datas);
-		m_Size = std::exchange(other.m_Size, 0);
+		m_Buffer = std::move(other.m_Buffer);
+		m_Mapped = std::exchange(other.m_Mapped, nullptr);
+		m_PerFrameSize = other.m_PerFrameSize;
+		m_AlignedSize = other.m_AlignedSize;
 
 		return *this;
 	}

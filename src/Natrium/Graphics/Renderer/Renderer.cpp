@@ -175,13 +175,13 @@ namespace Na {
 
 		fd.cmd_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline.pipeline());
 
-		if (!pipeline.descriptor_sets().empty())
+		if (pipeline.descriptor_set())
 			fd.cmd_buffer.bindDescriptorSets(
 				vk::PipelineBindPoint::eGraphics,
 				pipeline.layout(),
 				0, // first set
-				1, &pipeline.descriptor_sets()[m_CurrentFrame],
-				0, nullptr // dynamic offsets
+				1, &pipeline.descriptor_set(),
+				pipeline.dynamic_offset_count(), pipeline.dynamic_offsets().ptr() + (m_CurrentFrame * pipeline.dynamic_offset_count())
 			);
 	}
 
@@ -235,12 +235,14 @@ namespace Na {
 
 	void Renderer::set_uniform_buffer(UniformBuffer& uniform_buffer, const void* data) const
 	{
-		memcpy(uniform_buffer.datas()[m_CurrentFrame].mapped, data, uniform_buffer.size());
+		void* mapped = (Byte*)(uniform_buffer.mapped_data()) + (m_CurrentFrame * uniform_buffer.aligned_size());
+		memcpy(mapped, data, uniform_buffer.per_frame_size());
 	}
 
 	void Renderer::set_storage_buffer(StorageBuffer& storage_buffer, const void* data) const
 	{
-		memcpy(storage_buffer.datas()[m_CurrentFrame].mapped, data, storage_buffer.size());
+		void* mapped = (Byte*)(storage_buffer.mapped_data()) + (m_CurrentFrame * storage_buffer.aligned_size());
+		memcpy(mapped, data, storage_buffer.per_frame_size());
 	}
 
 	void Renderer::_create_command_objects(void)

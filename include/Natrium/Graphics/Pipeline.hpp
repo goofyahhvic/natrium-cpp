@@ -47,8 +47,8 @@ namespace Na {
 	enum class ShaderUniformType : u8 {
 		None          = 0,
 
-		UniformBuffer = (u8)vk::DescriptorType::eUniformBuffer,
-		StorageBuffer = (u8)vk::DescriptorType::eStorageBuffer,
+		UniformBuffer = (u8)vk::DescriptorType::eUniformBufferDynamic,
+		StorageBuffer = (u8)vk::DescriptorType::eStorageBufferDynamic,
 		Texture       = (u8)vk::DescriptorType::eCombinedImageSampler,
 
 		UBO           = UniformBuffer,
@@ -94,7 +94,13 @@ namespace Na {
 		[[nodiscard]] inline vk::PipelineLayout layout(void) const { return m_Layout; }
 
 		[[nodiscard]] inline vk::DescriptorPool descriptor_pool(void) const { return m_DescriptorPool; }
-		[[nodiscard]] inline const Na::ArrayVector<vk::DescriptorSet>& descriptor_sets(void) const { return m_DescriptorSets; }
+		[[nodiscard]] inline const vk::DescriptorSet& descriptor_set(void) const { return m_DescriptorSet; }
+
+		[[nodiscard]] inline ArrayList<u32>& dynamic_offsets(void) { return m_DynamicOffsets; }
+		[[nodiscard]] inline const ArrayList<u32>& dynamic_offsets(void) const { return m_DynamicOffsets; }
+		[[nodiscard]] inline u32 dynamic_offset_count(void) const { return m_DynamicOffsetCount; }
+		[[nodiscard]] inline u32 dynamic_offset_index(void) const { return m_DynamicOffsetIndex; }
+		inline void increment_dynamic_offset_index(void) { m_DynamicOffsetIndex++; }
 
 		[[nodiscard]] inline operator bool(void) const { return m_Pipeline; }
 	private:
@@ -104,7 +110,11 @@ namespace Na {
 		vk::PipelineLayout m_Layout;
 
 		vk::DescriptorPool m_DescriptorPool;
-		Na::ArrayVector<vk::DescriptorSet> m_DescriptorSets;
+		vk::DescriptorSet m_DescriptorSet;
+
+		ArrayList<u32> m_DynamicOffsets;
+		u32 m_DynamicOffsetCount = 0;
+		u32 m_DynamicOffsetIndex = 0;
 	};
 } // namespace Na
 

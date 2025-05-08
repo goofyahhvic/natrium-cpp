@@ -52,7 +52,7 @@ namespace Na {
 	static vk::DescriptorSetLayout createDescriptorSetLayout(const ShaderUniformLayout& descriptor_layout)
 	{
 		Na::ArrayVector<vk::DescriptorSetLayoutBinding> bindings(descriptor_layout.size());
-		for (size_t i = 0; const auto & binding : descriptor_layout)
+		for (size_t i = 0; const auto& binding : descriptor_layout)
 		{
 			bindings[i].binding            = binding.binding;
 			bindings[i].descriptorType     = (vk::DescriptorType)binding.type;
@@ -70,12 +70,12 @@ namespace Na {
 		return VkContext::GetLogicalDevice().createDescriptorSetLayout(create_info);
 	}
 
-	static vk::DescriptorPool createDescriptorPool(const ShaderUniformLayout& descriptor_layout, u32 max_frames_in_flight)
+	static vk::DescriptorPool createDescriptorPool(const ShaderUniformLayout& descriptor_layout)
 	{
 		Na::ArrayVector<vk::DescriptorPoolSize> pool_sizes(descriptor_layout.size());
 		for (size_t i = 0; const ShaderUniform& uniform : descriptor_layout)
 		{
-			pool_sizes[i].descriptorCount = max_frames_in_flight;
+			pool_sizes[i].descriptorCount = 1; // 1 * uniform.count
 			pool_sizes[i].type = (vk::DescriptorType)uniform.type;
 			i++;
 		}
@@ -83,9 +83,25 @@ namespace Na {
 		vk::DescriptorPoolCreateInfo create_info;
 		create_info.poolSizeCount = (u32)pool_sizes.size();
 		create_info.pPoolSizes = pool_sizes.ptr();
-		create_info.maxSets = max_frames_in_flight;
+		create_info.maxSets = 1; // 1 * uniform.count
 
 		return VkContext::GetLogicalDevice().createDescriptorPool(create_info);
+	}
+
+	static vk::DescriptorSet createDescriptorSet(vk::DescriptorSetLayout& layout, vk::DescriptorPool pool)
+	{
+		vk::DescriptorSet descriptor_set;
+
+		vk::DescriptorSetAllocateInfo alloc_info;
+		alloc_info.descriptorPool = pool;
+		alloc_info.descriptorSetCount = 1;
+		alloc_info.pSetLayouts = &layout;
+
+		vk::Result result = VkContext::GetLogicalDevice().allocateDescriptorSets(&alloc_info, &descriptor_set);
+		if (result != vk::Result::eSuccess)
+			throw std::runtime_error("Failed to allocate descriptor set!");
+
+		return descriptor_set;
 	}
 
 	static Na::ArrayVector<vk::DescriptorSet> createDescriptorSets(u32 count, vk::DescriptorSetLayout* layouts, vk::DescriptorPool pool)
@@ -96,7 +112,9 @@ namespace Na {
 		alloc_info.pSetLayouts = layouts;
 
 		Na::ArrayVector<vk::DescriptorSet> descriptor_sets(count);
-		(void)VkContext::GetLogicalDevice().allocateDescriptorSets(&alloc_info, descriptor_sets.ptr());
+		vk::Result result = VkContext::GetLogicalDevice().allocateDescriptorSets(&alloc_info, descriptor_sets.ptr());
+		if (result != vk::Result::eSuccess)
+			throw std::runtime_error("Failed to allocate descriptor sets!");
 		return descriptor_sets;
 	}
 
@@ -108,6 +126,17 @@ namespace Na {
 		const PushConstantLayout& push_constant_layout
 	)
 	{
+		for (const ShaderUniform& uniform : uniform_data_layout)
+		{
+			if (
+				uniform.type == ShaderUniformType::StorageBuffer ||
+				uniform.type == ShaderUniformType::UniformBuffer
+			)
+				m_DynamicOffsetCount++;
+		}
+		m_DynamicOffsets.reallocate(u64(m_DynamicOffsetCount * renderer_core.settings().max_frames_in_flight));
+		m_DynamicOffsets.resize(m_DynamicOffsets.capacity());
+
 		Na::ArrayVector<vk::DynamicState> dynamic_states = {
 			vk::DynamicState::eViewport,
 			vk::DynamicState::eScissor
@@ -172,16 +201,8 @@ namespace Na {
 
 		if (uniform_data_layout.size())
 		{
-			Na::ArrayVector<vk::DescriptorSetLayout> descriptor_layouts(renderer_core.settings().max_frames_in_flight);
-			for (vk::DescriptorSetLayout& descriptor_layout : descriptor_layouts)
-				descriptor_layout = m_DescriptorLayout;
-
-			m_DescriptorPool = createDescriptorPool(uniform_data_layout, renderer_core.settings().max_frames_in_flight);
-			m_DescriptorSets = createDescriptorSets(
-				renderer_core.settings().max_frames_in_flight,
-				descriptor_layouts.ptr(),
-				m_DescriptorPool
-			);
+			m_DescriptorPool = createDescriptorPool(uniform_data_layout);
+			m_DescriptorSet = createDescriptorSet(m_DescriptorLayout, m_DescriptorPool);
 		}
 	}
 
@@ -194,7 +215,7 @@ namespace Na {
 		logical_device.destroyDescriptorSetLayout(m_DescriptorLayout);
 		logical_device.destroyPipelineLayout(m_Layout);
 
-		m_DescriptorSets.~ArrayVector();
+		m_DynamicOffsets.~ArrayList();
 	}
 
 	GraphicsPipeline::GraphicsPipeline(GraphicsPipeline&& other)
@@ -204,7 +225,10 @@ namespace Na {
 	m_Layout(std::exchange(other.m_Layout, nullptr)),
 
 	m_DescriptorPool(std::exchange(other.m_DescriptorPool, nullptr)),
-	m_DescriptorSets(std::move(other.m_DescriptorSets))
+	m_DescriptorSet(std::exchange(other.m_DescriptorSet, nullptr)),
+	m_DynamicOffsets(std::move(other.m_DynamicOffsets)),
+	m_DynamicOffsetCount(other.m_DynamicOffsetCount),
+	m_DynamicOffsetIndex(other.m_DynamicOffsetIndex)
 	{}
 
 	GraphicsPipeline& GraphicsPipeline::operator=(GraphicsPipeline&& other)
@@ -217,7 +241,11 @@ namespace Na {
 		m_Layout = std::exchange(other.m_Layout, nullptr);
 
 		m_DescriptorPool = std::exchange(other.m_DescriptorPool, nullptr);
-		m_DescriptorSets = std::move(other.m_DescriptorSets);
+		m_DescriptorSet = std::exchange(other.m_DescriptorSet, nullptr);
+
+		m_DynamicOffsets = std::move(other.m_DynamicOffsets);
+		m_DynamicOffsetCount = other.m_DynamicOffsetCount;
+		m_DynamicOffsetIndex = other.m_DynamicOffsetIndex;
 
 		return *this;
 	}

@@ -7,12 +7,6 @@
 namespace Na {
 	class StorageBuffer {
 	public:
-		struct Data {
-			vk::Buffer buffer;
-			vk::DeviceMemory memory;
-			void* mapped;
-		};
-	public:
 		StorageBuffer(void) = default;
 		StorageBuffer(u64 size, const RendererSettings& renderer_settings);
 		void destroy(void);
@@ -26,15 +20,21 @@ namespace Na {
 
 		void bind_to_pipeline(u32 binding, GraphicsPipeline& pipeline) const;
 
-		[[nodiscard]] inline Na::ArrayVector<Data>& datas(void) { return m_Datas; }
-		[[nodiscard]] inline const Na::ArrayVector<Data>& datas(void) const { return m_Datas; }
+		[[nodiscard]] inline u64 size(void) const { return m_PerFrameSize; }
+		[[nodiscard]] inline u64 per_frame_size(void) const { return m_PerFrameSize; }
+		[[nodiscard]] inline u64 aligned_size(void) const { return m_AlignedSize; }
+		[[nodiscard]] inline u64 total_size(void) const { return m_Buffer.size; }
 
-		[[nodiscard]] inline u64 size(void) const { return m_Size; }
-		[[nodiscard]] inline operator bool(void) const { return m_Size; }
+		[[nodiscard]] inline operator bool(void) const { return m_Buffer; }
+
+		[[nodiscard]] inline const DeviceBuffer& buffer(void) const { return m_Buffer; }
+		[[nodiscard]] inline void* mapped_data(void) const { return m_Mapped; }
 	private:
-		Na::ArrayVector<Data> m_Datas;
+		DeviceBuffer m_Buffer;
+		void* m_Mapped;
 
-		u64 m_Size = 0;
+		u64 m_PerFrameSize = 0;
+		u64 m_AlignedSize = 0;
 	};
 } // namespace Na
 

@@ -105,16 +105,15 @@ namespace Na {
 		descriptor_info.imageView = m_ImageView;
 		descriptor_info.sampler = m_Sampler;
 
-		for (vk::DescriptorSet descriptor_set : pipeline.descriptor_sets())
-			Internal::WriteToDescriptorSet(
-				descriptor_set,
-				binding,
-				vk::DescriptorType::eCombinedImageSampler,
-				1,
-				nullptr, // buffer info
-				&descriptor_info,
-				nullptr // texel buffer view
-			);
+		Internal::WriteToDescriptorSet(
+			pipeline.descriptor_set(),
+			binding,
+			vk::DescriptorType::eCombinedImageSampler,
+			1,
+			nullptr, // buffer info
+			&descriptor_info,
+			nullptr // texel buffer view
+		);
 	}
 
 	Texture::Texture(Texture&& other)
