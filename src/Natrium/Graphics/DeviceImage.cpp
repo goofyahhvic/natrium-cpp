@@ -27,6 +27,7 @@ namespace Na {
 
 	DeviceImage::DeviceImage(
 		const vk::Extent3D& extent,
+		u32 layer_count,
 		vk::ImageAspectFlagBits aspect_mask,
 		vk::Format format,
 		vk::ImageTiling tiling,
@@ -36,6 +37,8 @@ namespace Na {
 		vk::MemoryPropertyFlags memory_properties
 	)
 	{
+		NA_ASSERT(layer_count > 0, "Failed to create DeviceImage: Invalid layer count!");
+
 		vk::Device logical_device = VkContext::GetLogicalDevice();
 
 		this->extent = extent;
@@ -52,11 +55,16 @@ namespace Na {
 		
 		vk::ImageCreateInfo create_info;
 
-		create_info.imageType = vk::ImageType::e2D;
+		if (extent.depth == 1)
+			create_info.imageType = vk::ImageType::e2D;
+		else if (extent.depth > 1)
+			create_info.imageType = vk::ImageType::e3D;
+		else 
+			throw std::runtime_error("Failed to create DeviceImage: Invalid depth!");
 
 		create_info.extent = extent;
 		create_info.mipLevels = 1;
-		create_info.arrayLayers = 1;
+		create_info.arrayLayers = layer_count;
 
 		create_info.format = format;
 
@@ -150,10 +158,8 @@ namespace Na {
 		VkContext::EndSingleTimeCommands(cmd_buffer);
 	}
 
-	void DeviceImage::copy_from_buffer(vk::Buffer buffer)
+	void DeviceImage::copy_from_buffer(vk::Buffer buffer, u32 starting_layer, u32 layer_count)
 	{
-		vk::Device logical_device = VkContext::GetLogicalDevice();
-
 		vk::CommandBuffer cmd_buffer = VkContext::BeginSingleTimeCommands();
 
 		vk::BufferImageCopy region;
@@ -163,8 +169,8 @@ namespace Na {
 
 		region.imageSubresource.aspectMask = this->subresource_range.aspectMask;
 		region.imageSubresource.mipLevel = 0;
-		region.imageSubresource.baseArrayLayer = 0;
-		region.imageSubresource.layerCount = 1;
+		region.imageSubresource.baseArrayLayer = starting_layer;
+		region.imageSubresource.layerCount = layer_count;
 
 		region.imageOffset = {{ 0, 0, 0 }};
 		region.imageExtent = this->extent;
@@ -175,6 +181,38 @@ namespace Na {
 			vk::ImageLayout::eTransferDstOptimal,
 			1, &region
 		);
+
+		VkContext::EndSingleTimeCommands(cmd_buffer);
+	}
+
+	void DeviceImage::copy_from_buffers(const vk::Buffer* buffers, u32 buffer_count, u32 starting_layer)
+	{
+		vk::CommandBuffer cmd_buffer = VkContext::BeginSingleTimeCommands();
+
+		vk::BufferImageCopy region;
+		region.bufferOffset = 0;
+		region.bufferRowLength = 0;
+		region.bufferImageHeight = 0;
+
+		region.imageSubresource.aspectMask = this->subresource_range.aspectMask;
+
+		region.imageSubresource.mipLevel = 0;
+		region.imageSubresource.layerCount = 1;
+
+		region.imageOffset = { { 0, 0, 0 } };
+		region.imageExtent = this->extent;
+
+		for (u32 i = starting_layer; i < starting_layer + buffer_count; i++)
+		{
+			region.imageSubresource.baseArrayLayer = i;
+
+			cmd_buffer.copyBufferToImage(
+				buffers[i],
+				this->img,
+				vk::ImageLayout::eTransferDstOptimal,
+				1, &region
+			);
+		}
 
 		VkContext::EndSingleTimeCommands(cmd_buffer);
 	}
@@ -201,13 +239,19 @@ namespace Na {
 	vk::ImageView CreateImageView(
 		vk::Image img,
 		vk::ImageAspectFlagBits aspect_mask,
-		vk::Format format
+		vk::Format format,
+		u32 layer_count
 	)
 	{
 		vk::ImageViewCreateInfo create_info;
 
 		create_info.image = img;
-		create_info.viewType = vk::ImageViewType::e2D;
+		if (layer_count == 1)
+			create_info.viewType = vk::ImageViewType::e2D;
+		else if (layer_count > 1)
+			create_info.viewType = vk::ImageViewType::e2DArray;
+		else
+			throw std::runtime_error("Failed to create Image View: Invalid layer count!");
 
 		create_info.format = format;
 
@@ -217,7 +261,7 @@ namespace Na {
 		create_info.subresourceRange.levelCount = 1;
 
 		create_info.subresourceRange.baseArrayLayer = 0;
-		create_info.subresourceRange.layerCount = 1;
+		create_info.subresourceRange.layerCount = layer_count;
 
 		return VkContext::GetLogicalDevice().createImageView(create_info);
 	}

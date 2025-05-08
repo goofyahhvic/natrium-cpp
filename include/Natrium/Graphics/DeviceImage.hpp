@@ -27,6 +27,7 @@ namespace Na {
 		DeviceImage(void) {};
 		DeviceImage(
 			const vk::Extent3D& extent,
+			u32 layer_count,
 			vk::ImageAspectFlagBits aspect_mask,
 			vk::Format format,
 			vk::ImageTiling tiling,
@@ -45,12 +46,22 @@ namespace Na {
 
 		void transition_layout(vk::ImageLayout old_layout, vk::ImageLayout new_layout);
 
-		void copy_from_buffer(vk::Buffer buffer);
+		void copy_from_buffer(vk::Buffer buffer, u32 starting_layer = 0, u32 layer_count = 1);
+
+		/// 
+		/// copies each buffer into a separate layer, starting at starting_layer
+		/// 
+		void copy_from_buffers(const vk::Buffer* buffers, u32 buffer_count, u32 starting_layer = 0);
+
+		/// 
+		/// copies each buffer into a separate layer, starting at starting_layer
+		/// 
+		inline void copy_from_buffers(const std::initializer_list<vk::Buffer> buffers, u32 starting_layer = 0) { this->copy_from_buffers(buffers.begin(), (u32)buffers.size(), starting_layer); }
 
 		[[nodiscard]] inline operator bool(void) const { return format != vk::Format::eUndefined; }
 	};
 
-	vk::ImageView CreateImageView(vk::Image img, vk::ImageAspectFlagBits aspect_mask, vk::Format format);
+	vk::ImageView CreateImageView(vk::Image img, vk::ImageAspectFlagBits aspect_mask, vk::Format format, u32 layer_count = 1);
 }
 
 #endif // NA_DEVICE_IMAGE_HPP

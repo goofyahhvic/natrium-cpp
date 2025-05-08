@@ -8,7 +8,7 @@
 namespace Na {
 	class Texture {
 	public:
-		const ShaderUniformType type = ShaderUniformType::Texture;
+		const ShaderUniformType descriptor_type = ShaderUniformType::Texture;
 
 		Texture(void) = default;
 		Texture(const Image& img, const RendererSettings& renderer_settings);

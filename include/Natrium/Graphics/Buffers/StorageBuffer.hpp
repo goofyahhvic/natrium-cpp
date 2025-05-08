@@ -7,7 +7,7 @@
 namespace Na {
 	class StorageBuffer {
 	public:
-		const ShaderUniformType type = ShaderUniformType::StorageBuffer;
+		const ShaderUniformType descriptor_type = ShaderUniformType::StorageBuffer;
 
 		StorageBuffer(void) = default;
 		StorageBuffer(u64 size, const RendererSettings& renderer_settings);

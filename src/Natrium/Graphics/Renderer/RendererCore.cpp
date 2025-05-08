@@ -157,7 +157,8 @@ namespace Na {
 			m_ImageViews[i] = CreateImageView(
 				m_Images[i],
 				vk::ImageAspectFlagBits::eColor,
-				m_SwapchainFormat.format
+				m_SwapchainFormat.format,
+				1 // layer count
 			);
 	}
 
@@ -165,6 +166,7 @@ namespace Na {
 	{
 		m_ColorImage = DeviceImage(
 			{ m_Width, m_Height, 1 },
+			1, // layer count
 			vk::ImageAspectFlagBits::eColor,
 			m_SwapchainFormat.format,
 			vk::ImageTiling::eOptimal,
@@ -173,7 +175,12 @@ namespace Na {
 			VkContext::GetMSAASamples(m_Settings.msaa_enabled),
 			vk::MemoryPropertyFlagBits::eDeviceLocal
 		);
-		m_ColorImageView = CreateImageView(m_ColorImage.img, vk::ImageAspectFlagBits::eColor, m_SwapchainFormat.format);
+		m_ColorImageView = CreateImageView(
+			m_ColorImage.img,
+			vk::ImageAspectFlagBits::eColor,
+			m_SwapchainFormat.format,
+			1 // layer count
+		);
 	}
 
 	void RendererCore::_create_depth_buffer(void)
@@ -186,6 +193,7 @@ namespace Na {
 
 		m_DepthImage = DeviceImage(
 			{ m_Width, m_Height, 1 },
+			1, // layer count
 			vk::ImageAspectFlagBits::eDepth,
 			depth_format,
 			vk::ImageTiling::eOptimal,
@@ -194,7 +202,12 @@ namespace Na {
 			VkContext::GetMSAASamples(m_Settings.msaa_enabled),
 			vk::MemoryPropertyFlagBits::eDeviceLocal
 		);
-		m_DepthImageView = CreateImageView(m_DepthImage.img, vk::ImageAspectFlagBits::eDepth, depth_format);
+		m_DepthImageView = CreateImageView(
+			m_DepthImage.img,
+			vk::ImageAspectFlagBits::eDepth,
+			depth_format,
+			1 // layer count
+		);
 	}
 
 	void RendererCore::_create_render_pass(void)

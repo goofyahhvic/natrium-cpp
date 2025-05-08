@@ -289,7 +289,7 @@ namespace Na {
 				break;
 			}
 			default:
-				throw std::runtime_error("Failed to bind uniform to pipeline: Uniform object of unknown type!");
+				throw std::runtime_error("Failed to bind uniform to pipeline: Uniform object of unknown descriptor type!");
 		}
 	}
 

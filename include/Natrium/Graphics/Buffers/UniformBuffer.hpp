@@ -7,7 +7,7 @@
 namespace Na {
 	class UniformBuffer {
 	public:
-		const ShaderUniformType type = ShaderUniformType::UniformBuffer;
+		const ShaderUniformType descriptor_type = ShaderUniformType::UniformBuffer;
 
 		UniformBuffer(void) = default;
 		UniformBuffer(u64 size, const RendererSettings& renderer_settings);

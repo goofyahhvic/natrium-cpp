@@ -57,6 +57,7 @@ namespace Na {
 
 		m_Image = DeviceImage(
 			{ (u32)img.width(), (u32)img.height(), 1 }, // extent
+			1, // layer count
 			vk::ImageAspectFlagBits::eColor,
 			vk::Format::eR8G8B8A8Srgb,
 			vk::ImageTiling::eOptimal,
@@ -67,12 +68,17 @@ namespace Na {
 		);
 
 		m_Image.transition_layout(vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal);
-		m_Image.copy_from_buffer(buffer.buffer);
+		m_Image.copy_from_buffer(buffer.buffer, 0, 1);
 		m_Image.transition_layout(vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
 
 		buffer.destroy();
 
-		m_ImageView = CreateImageView(m_Image.img, vk::ImageAspectFlagBits::eColor, vk::Format::eR8G8B8A8Srgb);
+		m_ImageView = CreateImageView(
+			m_Image.img,
+			vk::ImageAspectFlagBits::eColor,
+			vk::Format::eR8G8B8A8Srgb,
+			1 // layer count
+		);
 
 		m_Sampler = createSampler(
 			vk::Filter::eLinear, // oversampling filter
