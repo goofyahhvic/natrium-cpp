@@ -27,24 +27,6 @@ namespace Na {
 		m_Buffer.destroy();
 	}
 
-	void UniformBuffer::bind_to_pipeline(u32 binding, GraphicsPipeline& pipeline) const
-	{
-		vk::DescriptorBufferInfo buffer_info(m_Buffer.buffer, 0, m_AlignedSize);
-
-		Internal::WriteToDescriptorSet(
-			pipeline.descriptor_set(),
-			binding,
-			vk::DescriptorType::eUniformBuffer,
-			1, // count
-			&buffer_info,
-			nullptr, // image info
-			nullptr // texel buffer view
-		);
-		for (u64 i = pipeline.dynamic_offset_index(); i < pipeline.dynamic_offsets().size(); i += pipeline.dynamic_offset_count())
-			pipeline.dynamic_offsets()[i] = u32(m_AlignedSize * i);
-		pipeline.increment_dynamic_offset_index();
-	}
-
 	UniformBuffer::UniformBuffer(UniformBuffer&& other)
 	: m_Buffer(std::move(other.m_Buffer)),
 	m_Mapped(std::exchange(other.m_Mapped, nullptr)),

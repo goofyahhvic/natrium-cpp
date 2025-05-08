@@ -7,6 +7,8 @@
 namespace Na {
 	class UniformBuffer {
 	public:
+		const ShaderUniformType type = ShaderUniformType::UniformBuffer;
+
 		UniformBuffer(void) = default;
 		UniformBuffer(u64 size, const RendererSettings& renderer_settings);
 		void destroy(void);
@@ -17,8 +19,6 @@ namespace Na {
 
 		UniformBuffer(UniformBuffer&& other);
 		UniformBuffer& operator=(UniformBuffer&& other);
-
-		void bind_to_pipeline(u32 binding, GraphicsPipeline& pipeline) const;
 
 		[[nodiscard]] inline u64 size(void) const { return m_PerFrameSize; }
 		[[nodiscard]] inline u64 per_frame_size(void) const { return m_PerFrameSize; }

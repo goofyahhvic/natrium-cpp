@@ -98,24 +98,6 @@ namespace Na {
 		m_Image.destroy();
 	}
 
-	void Texture::bind_to_pipeline(u32 binding, GraphicsPipeline& pipeline) const
-	{
-		vk::DescriptorImageInfo descriptor_info;
-		descriptor_info.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-		descriptor_info.imageView = m_ImageView;
-		descriptor_info.sampler = m_Sampler;
-
-		Internal::WriteToDescriptorSet(
-			pipeline.descriptor_set(),
-			binding,
-			vk::DescriptorType::eCombinedImageSampler,
-			1,
-			nullptr, // buffer info
-			&descriptor_info,
-			nullptr // texel buffer view
-		);
-	}
-
 	Texture::Texture(Texture&& other)
 	: m_Image(std::move(other.m_Image)),
 	m_ImageView(std::exchange(other.m_ImageView, nullptr)),

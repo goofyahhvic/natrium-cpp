@@ -7,6 +7,8 @@
 namespace Na {
 	class StorageBuffer {
 	public:
+		const ShaderUniformType type = ShaderUniformType::StorageBuffer;
+
 		StorageBuffer(void) = default;
 		StorageBuffer(u64 size, const RendererSettings& renderer_settings);
 		void destroy(void);
@@ -17,8 +19,6 @@ namespace Na {
 
 		StorageBuffer(StorageBuffer&& other);
 		StorageBuffer& operator=(StorageBuffer&& other);
-
-		void bind_to_pipeline(u32 binding, GraphicsPipeline& pipeline) const;
 
 		[[nodiscard]] inline u64 size(void) const { return m_PerFrameSize; }
 		[[nodiscard]] inline u64 per_frame_size(void) const { return m_PerFrameSize; }

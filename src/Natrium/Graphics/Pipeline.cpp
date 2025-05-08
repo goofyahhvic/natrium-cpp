@@ -5,6 +5,11 @@
 
 #include "./PipelineStates.hpp"
 
+#include "Internal.hpp"
+#include "Natrium/Graphics/Buffers/UniformBuffer.hpp"
+#include "Natrium/Graphics/Buffers/StorageBuffer.hpp"
+#include "Natrium/Graphics/Texture.hpp"
+
 namespace Na {
 	static std::tuple<
 		Na::ArrayVector<vk::VertexInputBindingDescription>,
@@ -216,6 +221,76 @@ namespace Na {
 		logical_device.destroyPipelineLayout(m_Layout);
 
 		m_DynamicOffsets.~ArrayList();
+	}
+
+	void GraphicsPipeline::_bind_uniform(u32 binding, const void* uniform)
+	{
+		ShaderUniformType uniform_type = *(const ShaderUniformType*)uniform;
+		switch (uniform_type)
+		{
+			case ShaderUniformType::Texture:
+			{
+				const Texture& texture = *(const Texture*)uniform;
+				vk::DescriptorImageInfo image_info;
+				image_info.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+				image_info.imageView = texture.img_view();
+				image_info.sampler = texture.sampler();
+
+				Internal::WriteToDescriptorSet(
+					m_DescriptorSet,
+					binding,
+					vk::DescriptorType::eCombinedImageSampler,
+					1,
+					nullptr, // buffer info
+					&image_info,
+					nullptr // texel buffer view
+				);
+
+				break;
+			}
+			case ShaderUniformType::UniformBuffer:
+			{
+				const UniformBuffer& uniform_buffer = *(const UniformBuffer*)uniform;
+				vk::DescriptorBufferInfo buffer_info(uniform_buffer.buffer().buffer, 0, uniform_buffer.aligned_size());
+
+				Internal::WriteToDescriptorSet(
+					m_DescriptorSet,
+					binding,
+					vk::DescriptorType::eUniformBufferDynamic,
+					1, // count
+					&buffer_info,
+					nullptr, // image info
+					nullptr // texel buffer view
+				);
+
+				for (u64 i = m_DynamicOffsetIndex++; i < m_DynamicOffsets.size(); i += m_DynamicOffsetCount)
+					m_DynamicOffsets[i] = u32(uniform_buffer.aligned_size() * i);
+
+				break;
+			}
+			case ShaderUniformType::StorageBuffer:
+			{
+				const StorageBuffer& storage_buffer = *(const StorageBuffer*)uniform;
+				vk::DescriptorBufferInfo buffer_info(storage_buffer.buffer().buffer, 0, storage_buffer.aligned_size());
+
+				Internal::WriteToDescriptorSet(
+					m_DescriptorSet,
+					binding,
+					vk::DescriptorType::eStorageBufferDynamic,
+					1, // count
+					&buffer_info,
+					nullptr, // image info
+					nullptr // texel buffer view
+				);
+
+				for (u64 i = m_DynamicOffsetIndex++; i < m_DynamicOffsets.size(); i += m_DynamicOffsetCount)
+					m_DynamicOffsets[i] = u32(storage_buffer.aligned_size() * i);
+
+				break;
+			}
+			default:
+				throw std::runtime_error("Failed to bind uniform to pipeline: Uniform object of unknown type!");
+		}
 	}
 
 	GraphicsPipeline::GraphicsPipeline(GraphicsPipeline&& other)

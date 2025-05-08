@@ -8,10 +8,13 @@
 namespace Na {
 	class Texture {
 	public:
+		const ShaderUniformType type = ShaderUniformType::Texture;
+
 		Texture(void) = default;
 		Texture(const Image& img, const RendererSettings& renderer_settings);
-		void destroy(void);
+
 		inline ~Texture(void) { this->destroy(); }
+		void destroy(void);
 
 		Texture(const Texture& other) = delete;
 		Texture& operator=(const Texture& other) = delete;
@@ -19,9 +22,11 @@ namespace Na {
 		Texture(Texture&& other);
 		Texture& operator=(Texture&& other);
 
-		void bind_to_pipeline(u32 binding, GraphicsPipeline& pipeline) const;
-
 		[[nodiscard]] inline operator bool(void) const { return m_Image; }
+
+		[[nodiscard]] inline const DeviceImage& img(void) const { return m_Image; }
+		[[nodiscard]] inline vk::ImageView img_view(void) const { return m_ImageView; }
+		[[nodiscard]] inline vk::Sampler sampler(void) const { return m_Sampler; }
 	private:
 		DeviceImage m_Image;
 		vk::ImageView m_ImageView = nullptr;
