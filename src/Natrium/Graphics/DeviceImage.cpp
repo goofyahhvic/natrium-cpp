@@ -36,13 +36,11 @@ namespace Na {
 		vk::SampleCountFlagBits sample_count,
 		vk::MemoryPropertyFlags memory_properties
 	)
+	: extent(extent), format(format), layer_count(layer_count)
 	{
 		NA_ASSERT(layer_count > 0, "Failed to create DeviceImage: Invalid layer count!");
 
 		vk::Device logical_device = VkContext::GetLogicalDevice();
-
-		this->extent = extent;
-		this->format = format;
 
 		this->subresource_range.aspectMask = aspect_mask;
 
@@ -51,7 +49,6 @@ namespace Na {
 
 		this->subresource_range.baseArrayLayer = 0;
 		this->subresource_range.layerCount = 1;
-
 		
 		vk::ImageCreateInfo create_info;
 

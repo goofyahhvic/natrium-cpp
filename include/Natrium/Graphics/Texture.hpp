@@ -24,6 +24,9 @@ namespace Na {
 
 		[[nodiscard]] inline operator bool(void) const { return m_Image; }
 
+		[[nodiscard]] inline u32 width(void) const { return m_Image.width; }
+		[[nodiscard]] inline u32 height(void) const { return m_Image.height; }
+
 		[[nodiscard]] inline const DeviceImage& img(void) const { return m_Image; }
 		[[nodiscard]] inline vk::ImageView img_view(void) const { return m_ImageView; }
 		[[nodiscard]] inline vk::Sampler sampler(void) const { return m_Sampler; }

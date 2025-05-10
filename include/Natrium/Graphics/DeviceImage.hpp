@@ -21,6 +21,7 @@ namespace Na {
 				u32 width, height, depth;
 			};
 		};
+		u32 layer_count = 0;
 		vk::Format format = vk::Format::eUndefined;
 		vk::ImageSubresourceRange subresource_range;
 
