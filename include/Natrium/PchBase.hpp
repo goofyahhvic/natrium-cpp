@@ -24,6 +24,7 @@
 #include <concepts>
 
 #include <initializer_list>
+#include <string_view>
 #include <string>
 #include <array>
 #include <vector>

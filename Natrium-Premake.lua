@@ -69,6 +69,9 @@ project "Natrium"
 
         buildoptions { "/utf-8" }
 
+    filter "toolset:clang"
+      buildoptions { "-Wno-switch" }
+
     filter "configurations:dbg"
         symbols "On"
         runtime "Debug"

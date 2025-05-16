@@ -75,7 +75,7 @@ namespace Na {
 		color_blend_attachment.dstAlphaBlendFactor = vk::BlendFactor::eZero;
 		color_blend_attachment.alphaBlendOp = vk::BlendOp::eAdd;
 
-		if (color_blend_attachment.blendEnable = enabled)
+		if ((color_blend_attachment.blendEnable = enabled))
 		{
 			color_blend_attachment.srcColorBlendFactor = vk::BlendFactor::eSrcAlpha;
 			color_blend_attachment.dstColorBlendFactor = vk::BlendFactor::eOneMinusSrcAlpha;

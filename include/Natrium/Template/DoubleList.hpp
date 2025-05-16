@@ -124,7 +124,7 @@ namespace Na {
 				return false;
 
 			m_Size--;
-			if (m_Tail = m_Tail->previous)
+			if ((m_Tail = m_Tail->previous))
 			{
 				delete m_Tail->next;
 				m_Tail->next = nullptr;
@@ -142,7 +142,7 @@ namespace Na {
 				return false;
 
 			m_Size--;
-			if (m_Head = m_Head->next)
+			if ((m_Head = m_Head->next))
 			{
 				delete m_Head->previous;
 				m_Head->previous = nullptr;
@@ -218,24 +218,24 @@ namespace Na {
 
 			Node* temp = node1->next;
 
-			if (node1->next = node2->next)
+			if ((node1->next = node2->next))
 				node1->next->previous = node1;
 			else
 				m_Tail = node1;
 
-			if (node2->next = temp)
+			if ((node2->next = temp))
 				node2->next->previous = node2;
 			else
 				m_Tail = node2;
 
 			temp = node1->previous;
 
-			if (node1->previous = node2->previous)
+			if ((node1->previous = node2->previous))
 				node1->previous->next = node1;
 			else
 				m_Head = node1;
 
-			if (node2->previous = temp)
+			if ((node2->previous = temp))
 				node2->previous->next = node2;
 			else
 				m_Head = node2;
