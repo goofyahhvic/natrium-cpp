@@ -6,7 +6,7 @@
 #include <vulkan/vulkan.hpp>
 #include <vulkan/vulkan_raii.hpp>
 
-#define NA_CHECK_VK(x, ...) { vk::Result r = x; if (r != vk::Result::eSuccess) throw std::runtime_error(NA_FORMAT("Result {}: {}", (int)r, NA_FORMAT(__VA_ARGS__))); }
+#define NA_VERIFY_VK(x, ...) NA_VERIFY(x == vk::Result::eSuccess, __VA_ARGS__)
 
 namespace Na {
 	struct QueueFamilyIndices {

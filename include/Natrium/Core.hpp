@@ -18,13 +18,15 @@
     #error "Define NA_PLATFORM_WINDOWS or NA_PLATFORM_LINUX!"
 #endif // NA_PLATFORM
 
+#define NA_VERIFY(x, ...) \
+    if(!(x)) {\
+        throw std::runtime_error(NA_FORMAT(__VA_ARGS__));\
+    }
+
 #if defined(NA_CONFIG_DIST)
     #define NA_ASSERT(x, ...)
 #else
-    #define NA_ASSERT(x, ...) \
-        if(!(x)) {\
-            throw std::runtime_error(NA_FORMAT(__VA_ARGS__));\
-        }
+    #define NA_ASSERT NA_VERIFY
 #endif // NA_CONFIG
 
 #if defined(NA_PLATFORM_WINDOWS) && defined(NA_CONFIG_DIST)

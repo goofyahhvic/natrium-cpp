@@ -87,7 +87,7 @@ namespace Na {
 			#if __cpp_lib_chrono >= 201907L
 				std::chrono::current_zone()->name(),
 			#else
-				""
+				"",
 			#endif
 				NA_COLOR_RSET
 			);

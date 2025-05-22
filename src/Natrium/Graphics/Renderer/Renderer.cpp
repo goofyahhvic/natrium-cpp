@@ -3,6 +3,7 @@
 
 #include "Natrium/Graphics/VkContext.hpp"
 #include "Natrium/Graphics/Pipeline.hpp"
+#include "Natrium/Core/Logger.hpp"
 
 namespace Na {
 	Renderer::Renderer(RendererCore& renderer_core)
@@ -18,11 +19,12 @@ namespace Na {
 	{
 		vk::Device logical_device = VkContext::GetLogicalDevice();
 
-		for (FrameData& frame : m_Frames)
+		for (FrameData& fd : m_Frames)
 		{
-			logical_device.destroyFence(frame.in_flight_fence);
-			logical_device.destroySemaphore(frame.render_finished_semaphore);
-			logical_device.destroySemaphore(frame.image_available_semaphore);
+			logical_device.destroyFence(fd.in_flight_fence);
+
+			logical_device.destroySemaphore(fd.image_available_semaphore);
+			logical_device.destroySemaphore(fd.render_finished_semaphore);
 		}
 
 		logical_device.destroyCommandPool(m_GraphicsCmdPool);
@@ -30,8 +32,10 @@ namespace Na {
 
 	bool Renderer::begin_frame(const glm::vec4& color)
 	{
+		g_Logger.fmt(Na::Info, "Frame #{}, Image #{}", m_FrameIndex, m_ImageIndex);
+
 		vk::Device logical_device = VkContext::GetLogicalDevice();
-		FrameData& fd = m_Frames[m_CurrentFrame];
+		FrameData& fd = m_Frames[m_FrameIndex];
 
 		fd.valid = true;
 
@@ -45,11 +49,17 @@ namespace Na {
 		vk::Result result = vk::Result::eSuccess;
 
 		result = logical_device.waitForFences(
-			1, &fd.in_flight_fence,
+			{ fd.in_flight_fence },
 			VK_TRUE, // wait all
 			UINT64_MAX // timeout
 		);
-		NA_CHECK_VK(result, "Failed to wait for in flight fence!");
+		NA_VERIFY_VK(
+			result, 
+			"Failed to begin frame #{} with image #{}:"
+			"Error in waiting for fence!",
+				m_FrameIndex,
+				m_ImageIndex
+		);
 
 		try
 		{
@@ -66,8 +76,13 @@ namespace Na {
 				m_Core->_recreate_swapchain();
 				return fd.valid = false;
 			} else
-				if (result != vk::Result::eSuccess && result != vk::Result::eSuboptimalKHR)
-					throw std::runtime_error(NA_FORMAT("Result {}: Failed to acquire swapchain image!", (int)result));
+			if (result != vk::Result::eSuccess && result != vk::Result::eSuboptimalKHR)
+				throw std::runtime_error(NA_FORMAT(
+					"Failed to begin frame #{} with image #{}:"
+					"Error in acquiring swapchain image!",
+						m_FrameIndex,
+						m_ImageIndex
+				));
 		} catch (const vk::OutOfDateKHRError& err)
 		{
 			(void)err;
@@ -76,7 +91,7 @@ namespace Na {
 		}
 
 		result = logical_device.resetFences(1, &fd.in_flight_fence);
-		NA_CHECK_VK(result, "Failed to acquire reset in flight fence!");
+		NA_VERIFY_VK(result, "Failed to begin frame #{} with image #{}: Error in resetting fence!", m_FrameIndex, m_ImageIndex);
 		fd.cmd_buffer.reset();
 
 		vk::CommandBufferBeginInfo begin_info;
@@ -108,7 +123,7 @@ namespace Na {
 	void Renderer::end_frame(void)
 	{
 		vk::Device logical_device = VkContext::GetLogicalDevice();
-		FrameData& fd = m_Frames[m_CurrentFrame];
+		FrameData& fd = m_Frames[m_FrameIndex];
 
 		vk::Result result = vk::Result::eSuccess;
 
@@ -132,7 +147,13 @@ namespace Na {
 		submit_info.pCommandBuffers = &fd.cmd_buffer;
 
 		result = VkContext::GetGraphicsQueue().submit(1, &submit_info, fd.in_flight_fence);
-		NA_CHECK_VK(result, "Failed to submit draw calls to graphics queue!");
+		NA_VERIFY_VK(
+			result,
+			"Failed to end frame #{} with image #{}:"
+			"Error in submitting to graphics queue!",
+				m_FrameIndex,
+				m_ImageIndex
+		);
 
 		vk::PresentInfoKHR present_info;
 		present_info.waitSemaphoreCount = submit_info.waitSemaphoreCount;
@@ -156,7 +177,7 @@ namespace Na {
 			case vk::Result::eSuccess:
 				break;
 			default:
-				NA_CHECK_VK(result, "Failed to present to graphics queue!");
+				NA_VERIFY_VK(result, "Failed to end frame #{} with image #{}: Error in presenting to graphics queue!", m_FrameIndex, m_ImageIndex);
 			}
 
 		} catch (const vk::OutOfDateKHRError& err)
@@ -165,13 +186,13 @@ namespace Na {
 			m_Core->_recreate_swapchain();
 		}
 
-		m_CurrentFrame = (m_CurrentFrame + 1) % m_Core->m_Settings.max_frames_in_flight;
+		m_FrameIndex = (m_FrameIndex + 1) % (u32)m_Frames.size();
 	}
 
 	void Renderer::bind_pipeline(const GraphicsPipeline& pipeline)
 	{
 		vk::Device logical_device = VkContext::GetLogicalDevice();
-		FrameData& fd = m_Frames[m_CurrentFrame];
+		FrameData& fd = m_Frames[m_FrameIndex];
 
 		fd.cmd_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline.pipeline());
 
@@ -181,7 +202,7 @@ namespace Na {
 				pipeline.layout(),
 				0, // first set
 				1, &pipeline.descriptor_set(),
-				pipeline.dynamic_offset_count(), pipeline.dynamic_offsets().ptr() + (m_CurrentFrame * pipeline.dynamic_offset_count())
+				pipeline.dynamic_offset_count(), pipeline.dynamic_offsets().ptr() + (m_FrameIndex * pipeline.dynamic_offset_count())
 			);
 	}
 
@@ -192,7 +213,7 @@ namespace Na {
 	)
 	{
 		vk::Device logical_device = VkContext::GetLogicalDevice();
-		FrameData& fd = m_Frames[m_CurrentFrame];
+		FrameData& fd = m_Frames[m_FrameIndex];
 
 		fd.cmd_buffer.pushConstants(
 			pipeline.layout(),
@@ -205,7 +226,7 @@ namespace Na {
 
 	void Renderer::draw_vertices(const VertexBuffer& vertex_buffer, u32 vertex_count, u32 instance_count)
 	{
-		FrameData& fd = m_Frames[m_CurrentFrame];
+		FrameData& fd = m_Frames[m_FrameIndex];
 
 		fd.cmd_buffer.bindVertexBuffers(0, { vertex_buffer.native() }, { 0 });
 
@@ -219,7 +240,7 @@ namespace Na {
 
 	void Renderer::draw_indexed(const VertexBuffer& vertex_buffer, const IndexBuffer& index_buffer, u32 instance_count)
 	{
-		FrameData& fd = m_Frames[m_CurrentFrame];
+		FrameData& fd = m_Frames[m_FrameIndex];
 
 		fd.cmd_buffer.bindVertexBuffers(0, { vertex_buffer.native() }, { 0 });
 		fd.cmd_buffer.bindIndexBuffer(index_buffer.native(), 0, vk::IndexType::eUint32);
@@ -233,16 +254,34 @@ namespace Na {
 		);
 	}
 
-	void Renderer::set_uniform_buffer(UniformBuffer& uniform_buffer, const void* data) const
+	void Renderer::set_descriptor_buffer(void* buffer, const void* data) const
 	{
-		void* mapped = (Byte*)(uniform_buffer.mapped_data()) + (m_CurrentFrame * uniform_buffer.aligned_size());
-		memcpy(mapped, data, uniform_buffer.per_frame_size());
-	}
+		NA_ASSERT(buffer, "Failed to set descriptor buffer: buffer is null!");
+		NA_ASSERT(data, "Failed to set descriptor buffer: data is null!");
 
-	void Renderer::set_storage_buffer(StorageBuffer& storage_buffer, const void* data) const
-	{
-		void* mapped = (Byte*)(storage_buffer.mapped_data()) + (m_CurrentFrame * storage_buffer.aligned_size());
-		memcpy(mapped, data, storage_buffer.per_frame_size());
+		ShaderUniformType uniform_type = *(const ShaderUniformType*)buffer;
+		switch (uniform_type)
+		{
+			case ShaderUniformType::UniformBuffer:
+			{
+				UniformBuffer& uniform_buffer = *(UniformBuffer*)buffer;
+				void* mapped = (Byte*)(uniform_buffer.mapped_data()) + (m_FrameIndex * uniform_buffer.aligned_size());
+				memcpy(mapped, data, uniform_buffer.per_frame_size());
+				break;
+			}
+			case ShaderUniformType::StorageBuffer:
+			{
+				StorageBuffer& storage_buffer = *(StorageBuffer*)buffer;
+				void* mapped = (Byte*)(storage_buffer.mapped_data()) + (m_FrameIndex * storage_buffer.aligned_size());
+				memcpy(mapped, data, storage_buffer.per_frame_size());
+				break;
+			}
+			default:
+			{
+				throw std::runtime_error("Failed to set descriptor buffer: buffer has unknown type!");
+				break;
+			}
+		}
 	}
 
 	void Renderer::_create_command_objects(void)
@@ -258,7 +297,7 @@ namespace Na {
 		vk::CommandBufferAllocateInfo cmd_alloc_info;
 		cmd_alloc_info.commandPool = m_GraphicsCmdPool;
 		cmd_alloc_info.level = vk::CommandBufferLevel::ePrimary;
-		cmd_alloc_info.commandBufferCount = m_Core->m_Settings.max_frames_in_flight;
+		cmd_alloc_info.commandBufferCount = (u32)m_Frames.size();
 
 		for (u64 i = 0; auto cmd_buffer : logical_device.allocateCommandBuffers(cmd_alloc_info))
 			m_Frames[i++].cmd_buffer = cmd_buffer;
@@ -273,19 +312,21 @@ namespace Na {
 		vk::FenceCreateInfo fence_info;
 		fence_info.flags = vk::FenceCreateFlagBits::eSignaled;
 
-		for (u32 i = 0; i < m_Core->m_Settings.max_frames_in_flight; i++)
+		for (u32 i = 0; i < m_Frames.size(); i++)
 		{
+			m_Frames[i].in_flight_fence = logical_device.createFence(fence_info);
+
 			m_Frames[i].image_available_semaphore = logical_device.createSemaphore(semaphore_info);
 			m_Frames[i].render_finished_semaphore = logical_device.createSemaphore(semaphore_info);
-			m_Frames[i].in_flight_fence = logical_device.createFence(fence_info);
 		}
+
 	}
 
 	Renderer::Renderer(Renderer&& other)
 	: m_Core(std::exchange(other.m_Core, nullptr)),
 	m_GraphicsCmdPool(std::exchange(other.m_GraphicsCmdPool, nullptr)),
 	m_Frames(std::move(other.m_Frames)),
-	m_CurrentFrame(other.m_CurrentFrame),
+	m_FrameIndex(other.m_FrameIndex),
 	m_ImageIndex(other.m_ImageIndex)
 	{}
 
@@ -296,7 +337,7 @@ namespace Na {
 		m_Core = std::exchange(other.m_Core, nullptr);
 		m_GraphicsCmdPool = std::exchange(other.m_GraphicsCmdPool, nullptr);
 		m_Frames = std::move(other.m_Frames);
-		m_CurrentFrame = other.m_CurrentFrame;
+		m_FrameIndex = other.m_FrameIndex;
 		m_ImageIndex = other.m_ImageIndex;
 
 		return *this;

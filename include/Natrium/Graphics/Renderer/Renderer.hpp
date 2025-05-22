@@ -37,16 +37,17 @@ namespace Na {
 		void draw_vertices(const VertexBuffer& vertex_buffer, u32 vertex_count, u32 instance_count = 1);
 		void draw_indexed(const VertexBuffer& vertex_buffer, const IndexBuffer& index_buffer, u32 instance_count = 1);
 
-		void set_uniform_buffer(UniformBuffer& uniform_buffer, const void* data) const;
-		void set_storage_buffer(StorageBuffer& storage_buffer, const void* data) const;
+		void set_descriptor_buffer(void* buffer, const void* data) const;
+
+		[[nodiscard]] inline const RendererSettings& settings(void) { return m_Core->settings(); }
 
 		[[nodiscard]] inline RendererCore& core(void) { return *m_Core; }
 		[[nodiscard]] inline const RendererCore& core(void) const { return *m_Core; }
 
-		[[nodiscard]] inline FrameData& current_frame(void) { return m_Frames[m_CurrentFrame]; }
-		[[nodiscard]] inline const FrameData& current_frame(void) const { return m_Frames[m_CurrentFrame]; }
+		[[nodiscard]] inline FrameData& current_frame(void) { return m_Frames[m_FrameIndex]; }
+		[[nodiscard]] inline const FrameData& current_frame(void) const { return m_Frames[m_FrameIndex]; }
 
-		[[nodiscard]] inline u32 current_frame_index(void) const { return m_CurrentFrame; }
+		[[nodiscard]] inline u32 current_frame_index(void) const { return m_FrameIndex; }
 
 		[[nodiscard]] inline operator bool(void) const { return m_Core; }
 
@@ -64,7 +65,8 @@ namespace Na {
 		vk::CommandPool m_GraphicsCmdPool;
 
 		ArrayVector<FrameData> m_Frames;
-		u32 m_CurrentFrame = 0;
+		u32 m_FrameIndex = 0;
+
 		u32 m_ImageIndex = 0;
 	};
 } // namespace Na
