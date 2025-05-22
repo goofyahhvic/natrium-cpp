@@ -7,57 +7,47 @@
 #include "Internal.hpp"
 
 namespace Na {
-	static vk::Sampler createSampler(
-		vk::Filter oversampling_filter,
-		vk::Filter undersampling_filter,
-		bool anisotropy_enabled,
-		float max_anisotropy
+	Texture::Texture(
+		const AssetHandle<Image>* imgs,
+		u32 count,
+		const RendererSettings& renderer_settings
 	)
 	{
-		vk::SamplerCreateInfo create_info;
+		NA_ASSERT(imgs, "Failed to create TextureArray: imgs is null!");
+		NA_ASSERT(count, "Failed to create TextureArray: count is 0!");
+		NA_ASSERT(count <= VkContext::GetPhysicalDevice().getProperties().limits.maxImageArrayLayers,
+				  "Failed to create TextureArray: image count exceeded gpu limit!");
 
-		create_info.magFilter = oversampling_filter;
-		create_info.minFilter = undersampling_filter;
+		const AssetHandle<Image>& first_img = imgs[0];
 
-		create_info.addressModeU = vk::SamplerAddressMode::eRepeat;
-		create_info.addressModeV = vk::SamplerAddressMode::eRepeat;
-		create_info.addressModeW = vk::SamplerAddressMode::eRepeat;
+		if (k_BuildConfig != BuildConfig::Distribution)
+		{
+			for (u32 i = 0; i < count; i++)
+			{
+				if (!*imgs[i])
+					throw std::runtime_error(NA_FORMAT("Failed to create TextureArray: Invalid image at index {}", i));
 
-		create_info.anisotropyEnable = anisotropy_enabled;
-		create_info.maxAnisotropy = max_anisotropy;
+				if (imgs[i]->size() != first_img->size())
+					throw std::runtime_error("Failed to create TextureArray: Image at index {} has a different size!");
+			}
+		}
 
-		create_info.borderColor = vk::BorderColor::eIntOpaqueBlack;
-
-		create_info.unnormalizedCoordinates = VK_FALSE;
-
-		create_info.compareEnable = VK_FALSE;
-		create_info.compareOp = vk::CompareOp::eAlways;
-
-		create_info.mipmapMode = vk::SamplerMipmapMode::eLinear;
-		create_info.mipLodBias = 0.0f;
-		create_info.minLod = 0.0f;
-		create_info.maxLod = 0.0f;
-
-		return VkContext::GetLogicalDevice().createSampler(create_info);
-	}
-
-	Texture::Texture(const Image& img, const RendererSettings& renderer_settings)
-	{
 		vk::Device logical_device = VkContext::GetLogicalDevice();
 
 		DeviceBuffer buffer(
-			img.size(),
+			first_img->size() * count,
 			vk::BufferUsageFlagBits::eTransferSrc,
 			vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent
 		);
 
-		void* data = logical_device.mapMemory(buffer.memory, 0, img.size());
-		memcpy(data, img.data(), img.size());
+		void* data = logical_device.mapMemory(buffer.memory, 0, first_img->size() * count);
+		for (u32 i = 0; i < count; i++)
+			memcpy((Byte*)data + i * first_img->size(), imgs[i]->data(), imgs[i]->size());
 		logical_device.unmapMemory(buffer.memory);
 
 		m_Image = DeviceImage(
-			{ (u32)img.width(), (u32)img.height(), 1 }, // extent
-			1, // layer count
+			{ (u32)first_img->width(), (u32)first_img->height(), 1 }, // extent
+			count, // layer count
 			vk::ImageAspectFlagBits::eColor,
 			vk::Format::eR8G8B8A8Srgb,
 			vk::ImageTiling::eOptimal,
@@ -68,19 +58,14 @@ namespace Na {
 		);
 
 		m_Image.transition_layout(vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal);
-		m_Image.copy_from_buffer(buffer.buffer, 0, 1);
+		m_Image.copy_all_from_buffer(buffer.buffer);
 		m_Image.transition_layout(vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
 
 		buffer.destroy();
 
-		m_ImageView = CreateImageView(
-			m_Image.img,
-			vk::ImageAspectFlagBits::eColor,
-			vk::Format::eR8G8B8A8Srgb,
-			1 // layer count
-		);
+		m_ImageView = m_Image.create_img_view();
 
-		m_Sampler = createSampler(
+		m_Sampler = Internal::CreateSampler(
 			vk::Filter::eLinear, // oversampling filter
 			vk::Filter::eLinear, // undersampling filter
 			renderer_settings.anisotropy_enabled,

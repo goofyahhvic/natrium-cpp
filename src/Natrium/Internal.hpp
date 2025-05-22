@@ -11,6 +11,13 @@ namespace Na::Internal {
 		vk::DescriptorImageInfo* image_info = nullptr,
 		vk::BufferView* texel_buffer_view = nullptr
 	);
+
+	vk::Sampler CreateSampler(
+		vk::Filter oversampling_filter,
+		vk::Filter undersampling_filter,
+		bool anisotropy_enabled,
+		float max_anisotropy
+	);
 } // namespace Na::Internal
 
 #endif // NA_RENDERER_INTERNAL_HPP

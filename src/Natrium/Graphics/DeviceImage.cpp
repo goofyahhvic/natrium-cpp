@@ -36,20 +36,20 @@ namespace Na {
 		vk::SampleCountFlagBits sample_count,
 		vk::MemoryPropertyFlags memory_properties
 	)
-	: extent(extent), format(format), layer_count(layer_count)
+	: extent(extent),
+	format(format),
+	subresource_range(
+		aspect_mask,
+		0,
+		1,
+		0,
+		layer_count
+	)
 	{
 		NA_ASSERT(layer_count > 0, "Failed to create DeviceImage: Invalid layer count!");
 
 		vk::Device logical_device = VkContext::GetLogicalDevice();
 
-		this->subresource_range.aspectMask = aspect_mask;
-
-		this->subresource_range.baseMipLevel = 0;
-		this->subresource_range.levelCount = 1;
-
-		this->subresource_range.baseArrayLayer = 0;
-		this->subresource_range.layerCount = 1;
-		
 		vk::ImageCreateInfo create_info;
 
 		if (extent.depth == 1)
@@ -105,8 +105,6 @@ namespace Na {
 	{
 		vk::Device logical_device = VkContext::GetLogicalDevice();
 
-		vk::CommandBuffer cmd_buffer = VkContext::BeginSingleTimeCommands();
-
 		vk::ImageMemoryBarrier barrier;
 
 		barrier.oldLayout = old_layout;
@@ -143,6 +141,8 @@ namespace Na {
 			throw std::runtime_error("Unsupported image layout transition!");
 		}
 
+		vk::CommandBuffer cmd_buffer = VkContext::BeginSingleTimeCommands();
+
 		cmd_buffer.pipelineBarrier(
 			execute_stage,
 			wait_stage,
@@ -157,8 +157,6 @@ namespace Na {
 
 	void DeviceImage::copy_from_buffer(vk::Buffer buffer, u32 starting_layer, u32 layer_count)
 	{
-		vk::CommandBuffer cmd_buffer = VkContext::BeginSingleTimeCommands();
-
 		vk::BufferImageCopy region;
 		region.bufferOffset = 0;
 		region.bufferRowLength = 0;
@@ -172,6 +170,8 @@ namespace Na {
 		region.imageOffset = {{ 0, 0, 0 }};
 		region.imageExtent = this->extent;
 
+		vk::CommandBuffer cmd_buffer = VkContext::BeginSingleTimeCommands();
+
 		cmd_buffer.copyBufferToImage(
 			buffer,
 			this->img,
@@ -181,6 +181,65 @@ namespace Na {
 
 		VkContext::EndSingleTimeCommands(cmd_buffer);
 	}
+
+	void DeviceImage::copy_all_from_buffer(vk::Buffer buffer, u32 starting_layer)
+	{
+		Na::ArrayVector<vk::BufferImageCopy> regions(this->layer_count() - starting_layer);
+		for (u32 i = 0; i < regions.size(); i++)
+		{
+			regions[i].bufferOffset = u64(i * this->width * this->height * 4);
+			regions[i].imageSubresource = vk::ImageSubresourceLayers(
+				vk::ImageAspectFlagBits::eColor,
+				0, // mip level
+				i + starting_layer,
+				1 // layer count (1 at a time)
+			);
+			regions[i].imageExtent = vk::Extent3D(this->width, this->height, 1);
+		}
+
+		vk::CommandBuffer cmd_buffer = VkContext::BeginSingleTimeCommands();
+
+		cmd_buffer.copyBufferToImage(
+			buffer, // src
+			this->img, // dest
+			vk::ImageLayout::eTransferDstOptimal,
+			(u32)regions.size(), regions.ptr()
+		);
+
+		VkContext::EndSingleTimeCommands(cmd_buffer);
+	}
+
+	/*
+	void DeviceImage::copy_all_from_buffer(vk::Buffer buffer, u32 element_size, u32 starting_layer)
+	{
+		vk::CommandBuffer cmd_buffer = VkContext::BeginSingleTimeCommands();
+
+		for (u32 i = 0; i < this->layer_count - starting_layer; i++)
+		{
+			vk::BufferImageCopy region;
+			region.bufferOffset = u64(i * element_size);
+			region.bufferRowLength = 0;
+			region.bufferImageHeight = 0;
+
+			region.imageSubresource.aspectMask = this->subresource_range.aspectMask;
+			region.imageSubresource.mipLevel = 0;
+			region.imageSubresource.baseArrayLayer = i + starting_layer;
+			region.imageSubresource.layerCount = 1;
+
+			region.imageOffset = { { 0, 0, 0 } };
+			region.imageExtent = this->extent;
+
+			cmd_buffer.copyBufferToImage(
+				buffer,
+				this->img,
+				vk::ImageLayout::eTransferDstOptimal,
+				1, &region
+			);
+		}
+
+		VkContext::EndSingleTimeCommands(cmd_buffer);
+	}
+	*/
 
 	void DeviceImage::copy_from_buffers(const vk::Buffer* buffers, u32 buffer_count, u32 starting_layer)
 	{
@@ -217,9 +276,9 @@ namespace Na {
 	DeviceImage::DeviceImage(DeviceImage&& other)
 	: img(std::exchange(other.img, nullptr)),
 	memory(std::exchange(other.memory, nullptr)),
-	extent(std::exchange(other.extent, { 0, 0, 0 })),
-	format(std::exchange(other.format, vk::Format::eUndefined)),
-	subresource_range(std::move(other.subresource_range))
+	extent(other.extent),
+	format(other.format),
+	subresource_range(other.subresource_range)
 	{}
 
 	DeviceImage& DeviceImage::operator=(DeviceImage&& other)
@@ -227,15 +286,25 @@ namespace Na {
 		this->destroy();
 		this->img = std::exchange(other.img, nullptr);
 		this->memory = std::exchange(other.memory, nullptr);
-		this->extent = std::exchange(other.extent, { 0, 0, 0 });
-		this->format = std::exchange(other.format, vk::Format::eUndefined);
-		this->subresource_range = std::move(other.subresource_range);
+		this->extent = other.extent;
+		this->format = other.format;
+		this->subresource_range = other.subresource_range;
 		return *this;
+	}
+
+	vk::ImageView DeviceImage::create_img_view(void) const
+	{
+		return CreateImageView(
+			this->img,
+			this->subresource_range.aspectMask,
+			this->format,
+			this->layer_count()
+		);
 	}
 
 	vk::ImageView CreateImageView(
 		vk::Image img,
-		vk::ImageAspectFlagBits aspect_mask,
+		vk::ImageAspectFlags aspect_mask,
 		vk::Format format,
 		u32 layer_count
 	)

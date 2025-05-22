@@ -31,4 +31,38 @@ namespace Na {
 			0, nullptr // descriptor copy
 		);
 	}
+
+	vk::Sampler Internal::CreateSampler(
+		vk::Filter oversampling_filter,
+		vk::Filter undersampling_filter,
+		bool anisotropy_enabled,
+		float max_anisotropy
+	)
+	{
+		vk::SamplerCreateInfo create_info;
+
+		create_info.magFilter = oversampling_filter;
+		create_info.minFilter = undersampling_filter;
+
+		create_info.addressModeU = vk::SamplerAddressMode::eRepeat;
+		create_info.addressModeV = vk::SamplerAddressMode::eRepeat;
+		create_info.addressModeW = vk::SamplerAddressMode::eRepeat;
+
+		create_info.anisotropyEnable = anisotropy_enabled;
+		create_info.maxAnisotropy = max_anisotropy;
+
+		create_info.borderColor = vk::BorderColor::eIntOpaqueBlack;
+
+		create_info.unnormalizedCoordinates = VK_FALSE;
+
+		create_info.compareEnable = VK_FALSE;
+		create_info.compareOp = vk::CompareOp::eAlways;
+
+		create_info.mipmapMode = vk::SamplerMipmapMode::eLinear;
+		create_info.mipLodBias = 0.0f;
+		create_info.minLod = 0.0f;
+		create_info.maxLod = 0.0f;
+
+		return VkContext::GetLogicalDevice().createSampler(create_info);
+	}
 } // namespace Na

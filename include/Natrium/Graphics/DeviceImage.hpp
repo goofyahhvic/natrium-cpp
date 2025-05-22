@@ -21,7 +21,6 @@ namespace Na {
 				u32 width, height, depth;
 			};
 		};
-		u32 layer_count = 0;
 		vk::Format format = vk::Format::eUndefined;
 		vk::ImageSubresourceRange subresource_range;
 
@@ -49,6 +48,8 @@ namespace Na {
 
 		void copy_from_buffer(vk::Buffer buffer, u32 starting_layer = 0, u32 layer_count = 1);
 
+		void copy_all_from_buffer(vk::Buffer buffer, u32 starting_layer = 0);
+
 		/// 
 		/// copies each buffer into a separate layer, starting at starting_layer
 		/// 
@@ -59,10 +60,13 @@ namespace Na {
 		/// 
 		inline void copy_from_buffers(const std::initializer_list<vk::Buffer> buffers, u32 starting_layer = 0) { this->copy_from_buffers(buffers.begin(), (u32)buffers.size(), starting_layer); }
 
+		[[nodiscard]] vk::ImageView create_img_view(void) const;
+
+		[[nodiscard]] inline u32 layer_count(void) const { return this->subresource_range.layerCount; }
 		[[nodiscard]] inline operator bool(void) const { return format != vk::Format::eUndefined; }
 	};
 
-	vk::ImageView CreateImageView(vk::Image img, vk::ImageAspectFlagBits aspect_mask, vk::Format format, u32 layer_count = 1);
+	vk::ImageView CreateImageView(vk::Image img, vk::ImageAspectFlags aspect_mask, vk::Format format, u32 layer_count = 1);
 }
 
 #endif // NA_DEVICE_IMAGE_HPP
