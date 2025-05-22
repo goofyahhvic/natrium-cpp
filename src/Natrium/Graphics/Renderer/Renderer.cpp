@@ -10,6 +10,7 @@ namespace Na {
 	: m_Core(&renderer_core)
 	{
 		m_Frames.resize(renderer_core.m_Settings.max_frames_in_flight);
+		m_ImageInFlightFences.resize(renderer_core.m_Images.size());
 
 		this->_create_command_objects();
 		this->_create_sync_objects();
@@ -60,35 +61,34 @@ namespace Na {
 				m_FrameIndex,
 				m_ImageIndex
 		);
+		
+		result = logical_device.acquireNextImageKHR(
+			m_Core->m_Swapchain,
+			UINT64_MAX, // timeout
+			fd.image_available_semaphore,
+			nullptr,
+			&m_ImageIndex
+		);
 
-		try
+		if (result == vk::Result::eErrorOutOfDateKHR)
 		{
-			result = logical_device.acquireNextImageKHR(
-				m_Core->m_Swapchain,
-				UINT64_MAX, // timeout
-				fd.image_available_semaphore,
-				nullptr,
-				&m_ImageIndex
-			);
-
-			if (result == vk::Result::eErrorOutOfDateKHR)
-			{
-				m_Core->_recreate_swapchain();
-				return fd.valid = false;
-			} else
-			if (result != vk::Result::eSuccess && result != vk::Result::eSuboptimalKHR)
-				throw std::runtime_error(NA_FORMAT(
-					"Failed to begin frame #{} with image #{}:"
-					"Error in acquiring swapchain image!",
-						m_FrameIndex,
-						m_ImageIndex
-				));
-		} catch (const vk::OutOfDateKHRError& err)
-		{
-			(void)err;
 			m_Core->_recreate_swapchain();
 			return fd.valid = false;
+		} else
+		if (result != vk::Result::eSuccess && result != vk::Result::eSuboptimalKHR)
+			throw std::runtime_error(NA_FORMAT(
+				"Failed to begin frame #{} with image #{}:"
+				"Error in acquiring swapchain image!",
+					m_FrameIndex,
+					m_ImageIndex
+			));
+
+		if (m_ImageInFlightFences[m_ImageIndex])
+		{
+			result = logical_device.waitForFences({ m_ImageInFlightFences[m_ImageIndex] }, VK_TRUE, UINT64_MAX);
+			NA_VERIFY_VK(result, "Failed to begin frame #{} with image #{}: Error in waiting for fence!", m_FrameIndex, m_ImageIndex);
 		}
+		m_ImageInFlightFences[m_ImageIndex] = fd.in_flight_fence;
 
 		result = logical_device.resetFences(1, &fd.in_flight_fence);
 		NA_VERIFY_VK(result, "Failed to begin frame #{} with image #{}: Error in resetting fence!", m_FrameIndex, m_ImageIndex);

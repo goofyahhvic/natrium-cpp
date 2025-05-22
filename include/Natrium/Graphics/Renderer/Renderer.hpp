@@ -67,6 +67,7 @@ namespace Na {
 		ArrayVector<FrameData> m_Frames;
 		u32 m_FrameIndex = 0;
 
+		ArrayVector<vk::Fence> m_ImageInFlightFences;
 		u32 m_ImageIndex = 0;
 	};
 } // namespace Na
