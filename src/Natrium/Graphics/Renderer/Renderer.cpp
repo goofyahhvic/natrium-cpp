@@ -33,7 +33,7 @@ namespace Na {
 
 	bool Renderer::begin_frame(const glm::vec4& color)
 	{
-		g_Logger.fmt(Na::Info, "Frame #{}, Image #{}", m_FrameIndex, m_ImageIndex);
+		//g_Logger.fmt(Na::Info, "Frame #{}, Image #{}", m_FrameIndex, m_ImageIndex);
 
 		vk::Device logical_device = VkContext::GetLogicalDevice();
 		FrameData& fd = m_Frames[m_FrameIndex];
