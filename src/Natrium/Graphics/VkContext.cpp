@@ -89,7 +89,7 @@ namespace Na {
 		{
 			bool found = false;
 
-			for (const VkLayerProperties& available_layer : available_layers)
+			for (const vk::LayerProperties& available_layer : available_layers)
 				if (!strcmp(requested_layer, available_layer.layerName))
 				{
 					found = true;
